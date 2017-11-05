@@ -31,14 +31,14 @@ flutter:
   #  - images/a_dot_burr.jpeg
   #  - images/a_dot_ham.jpeg
   assets:
-    - assets/sprites/Arrow.png
-    - assets/sprites/crate.png
-    - assets/sprites/landscape.png
-    - assets/sprites/leftTile.png
-    - assets/sprites/midtile.png
-    - assets/sprites/platform.png
-    - assets/sprites/rightTile.png
-    - assets/sprites/standaloneTile.png
+    - assets/images/Arrow.png
+    - assets/images/crate.png
+    - assets/images/landscape.png
+    - assets/images/leftTile.png
+    - assets/images/midtile.png
+    - assets/images/platform.png
+    - assets/images/rightTile.png
+    - assets/images/standaloneTile.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.io/assets-and-images/#resolution-aware.
