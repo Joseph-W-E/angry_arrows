@@ -3,9 +3,12 @@ import 'dart:math' as math;
 import 'package:flame/component.dart';
 
 abstract class Config {
-  final num width;
-  final num height;
-  final num angle;
+  final double width;
+  final double height;
+  final double angle;
+
+  double x;
+  double y;
 
   Config({this.width, this.height, this.angle});
 
@@ -21,11 +24,15 @@ class Arrow extends SpriteComponent {
     config.width,
     config.height,
     config.asset,
-  );
+  ) {
+    x = config.x;
+    y = config.y;
+    angle = config.angle;
+  }
 }
 
 class ArrowConfig extends Config {
-  ArrowConfig({num length: 128.0}) : super(
+  ArrowConfig({double length: 128.0}) : super(
     width: length / 10,
     height: length,
     angle: 0.0,
@@ -45,11 +52,15 @@ class Crate extends SpriteComponent {
     config.width,
     config.height,
     config.asset,
-  );
+  ) {
+    x = config.x;
+    y = config.y;
+    angle = config.angle;
+  }
 }
 
 class CrateConfig extends Config {
-  CrateConfig({num size: 128.0}) : super(
+  CrateConfig({double size: 128.0}) : super(
     width: 128.0,
     height: 128.0,
     angle: 0.0,
@@ -75,6 +86,15 @@ class Platform extends SpriteComponent {
   );
 }
 
+class PlatformConfig extends Config {
+  List<PlatformItemConfig> _items;
+
+  // todo
+
+  @override
+  String get asset => null;
+}
+
 class PlatformItem extends SpriteComponent {
   final PlatformItemConfig config;
 
@@ -88,7 +108,7 @@ class PlatformItem extends SpriteComponent {
 class PlatformItemConfig extends Config {
   final PlatformPosition position;
 
-  PlatformItemConfig({num size: 128.0, this.position}) : super(
+  PlatformItemConfig({double size: 128.0, this.position}) : super(
     width: 128.0,
     height: 128.0,
     angle: 0.0,
