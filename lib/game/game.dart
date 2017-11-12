@@ -15,7 +15,7 @@ class Level extends Game {
   List<Crate> _crates;
 
   List<Point> _points = [];
-  GestureInterpreter _interpreter = new GestureInterpreter();
+  GestureInterpreter _interpreter;
 
   Level({this.dimensions, this.config}) : assert(dimensions != null), assert(config != null) {
     _setupSprites();
@@ -23,6 +23,14 @@ class Level extends Game {
 
   void _setupSprites() {
     _arrow = new Arrow(config.arrow);
+
+    _interpreter = new GestureInterpreter(
+      arrowPoint: new Point(x: config.arrow.x, y: config.arrow.y),
+      arrowWidth: config.arrow.width,
+      arrowHeight: config.arrow.height,
+      arrowRadians: config.arrow.angle,
+    );
+
     _crates = config.crates.map((config) => new Crate(config)).toList();
   }
 
@@ -61,6 +69,7 @@ class Level extends Game {
     if (gesture is Scroll) {
       // move all the objects using the [Scroll]'s info
       _arrow.x += gesture.distance;
+      _crates.forEach((crate) => crate.x += gesture.distance);
     } else if (gesture is ControlArrow) {
       // move the arrow using the [ControlArrow]'s info
     } else if (gesture is LaunchArrow) {

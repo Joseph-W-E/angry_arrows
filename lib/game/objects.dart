@@ -32,10 +32,10 @@ class Arrow extends SpriteComponent {
 }
 
 class ArrowConfig extends Config {
-  ArrowConfig({double length: 128.0}) : super(
+  ArrowConfig({double length: 128.0, double radians: -1.0}) : super(
     width: length / 10,
     height: length,
-    angle: 0.0,
+    angle: radians,
   );
 
   @override
