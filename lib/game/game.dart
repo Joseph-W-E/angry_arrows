@@ -2,7 +2,7 @@ import 'dart:math' as math;
 import 'dart:ui';
 
 import 'package:angry_arrows/game/gesture.dart';
-import 'package:angry_arrows/game/hud.dart';
+import 'package:angry_arrows/game/level.dart';
 import 'package:angry_arrows/game/objects.dart';
 import 'package:flame/component.dart';
 import 'package:flame/game.dart';
@@ -32,6 +32,8 @@ class Level extends Game {
     );
 
     _crates = config.crates.map((config) => new Crate(config)).toList();
+
+    // todo setup platforms
   }
 
   @override
@@ -41,6 +43,9 @@ class Level extends Game {
 
     // render the crates
     _crates.forEach((crate) => _internalRender(canvas, crate));
+
+    // render the platforms
+    // todo render the platforms
   }
 
   @override
@@ -61,6 +66,7 @@ class Level extends Game {
     // todo figure out how to destroy the game and return to normal flutter
   }
 
+  // Determines how to manipulate the objects based off the received [gesture]
   void _handleGesture(double t, Gesture gesture) {
     // we should ignore potentially bad gestures
     // unless they're trying to grab the arrow
@@ -72,6 +78,7 @@ class Level extends Game {
       _crates.forEach((crate) => crate.x += gesture.distance);
     } else if (gesture is ControlArrow) {
       // move the arrow using the [ControlArrow]'s info
+
     } else if (gesture is LaunchArrow) {
       // move the objects and disable user input
     } else {
@@ -79,24 +86,11 @@ class Level extends Game {
     }
   }
 
+  // Renders the [sprite] on the [canvas].
   void _internalRender(Canvas canvas, SpriteComponent sprite) {
     canvas.save();
     sprite.render(canvas);
     canvas.restore();
     canvas.save();
   }
-}
-
-/// Configuration for the level.
-/// This includes:
-///   The hud
-///   All sprites
-class LevelConfiguration {
-  ArrowConfig arrow;
-  List<CrateConfig> crates;
-  List<PlatformItemConfig> platforms;
-
-  final Size dimensions;
-
-  LevelConfiguration({this.dimensions}) : assert(dimensions != null);
 }

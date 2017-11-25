@@ -19,6 +19,7 @@ class GestureInterpreter {
         // they let go, launch the arrow
         // return new LaunchArrow gesture
       }
+      _history.clear();
       return null;
     }
 
@@ -37,6 +38,7 @@ class GestureInterpreter {
 
   /// Determines what gesture to send back.
   Gesture _analyzeHistory() {
+    // Having more than 2 elements acts as a threshold (ignores very subtle inputs)
     if (_history.length <= 2) return null;
 
     Gesture gesture = _isControlArrowGesture() ?? _isLaunchArrowGesture() ?? _isScrollGesture();
@@ -68,6 +70,7 @@ class GestureInterpreter {
   }
 
   /// Determines if [_history] can be converted to a [Scroll] gesture.
+  /// This should never return null. It's the last resort in the chain of commands.
   Scroll _isScrollGesture() {
     var start = _history.first.point.x;
     var end = _history.last.point.x;
