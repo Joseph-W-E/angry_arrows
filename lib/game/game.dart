@@ -1,9 +1,11 @@
 import 'dart:math' as math;
 import 'dart:ui';
 
+import 'package:angry_arrows/common/common.dart';
 import 'package:angry_arrows/game/gesture.dart';
 import 'package:angry_arrows/game/level.dart';
 import 'package:angry_arrows/game/objects.dart';
+import 'package:angry_arrows/game/physics.dart';
 import 'package:flame/component.dart';
 import 'package:flame/game.dart';
 
@@ -17,12 +19,16 @@ class Level extends Game {
   List<Point> _points = [];
   GestureInterpreter _interpreter;
 
+  PhysicsHandler _physics;
+
   Level({this.dimensions, this.config}) : assert(dimensions != null), assert(config != null) {
     _setupSprites();
   }
 
   void _setupSprites() {
     _arrow = new Arrow(config.arrow);
+
+    _physics = new PhysicsHandler(_arrow);
 
     _interpreter = new GestureInterpreter(
       arrowPoint: new Point(x: config.arrow.x, y: config.arrow.y),
@@ -51,6 +57,8 @@ class Level extends Game {
   @override
   void update(double t) {
     _handleGesture(t, _interpreter.interpret(_points));
+    _interpreter.updateArrowInformation(point: new Point(x: _arrow.x, y: _arrow.y));
+    if (_physics.hasLaunched) _physics.update(t);
     _points.clear();
   }
 
@@ -73,18 +81,30 @@ class Level extends Game {
     if (gesture == null || (gesture.isNaive && gesture is! ControlArrow)) return;
 
     if (gesture is Scroll) {
-      // move all the objects using the [Scroll]'s info
+      if (_physics.hasLaunched) return;
       _arrow.x += gesture.distance;
       _crates.forEach((crate) => crate.x += gesture.distance);
+      // todo move the platforms just like the [_crates]
+
     } else if (gesture is ControlArrow) {
-      // move the arrow using the [ControlArrow]'s info
+      _arrow.x += gesture.distance * math.cos(gesture.radians);
+      _arrow.y += gesture.distance * math.sin(gesture.radians);
+      _arrow.angle = angleBetween(_arrowStartPoint, _currentArrowPoint);
 
     } else if (gesture is LaunchArrow) {
-      // move the objects and disable user input
+      // move the arrow to simulate launching
+      _physics.launch(
+        distance: distanceBetween(_arrowStartPoint, _currentArrowPoint),
+        radians: angleBetween(_arrowStartPoint, _currentArrowPoint),
+      );
+
     } else {
       print("Error: Unknown gesture $gesture");
     }
   }
+
+  Point get _arrowStartPoint => new Point(x: config.arrow.x, y: config.arrow.y);
+  Point get _currentArrowPoint => new Point(x: _arrow.x, y: _arrow.y);
 
   // Renders the [sprite] on the [canvas].
   void _internalRender(Canvas canvas, SpriteComponent sprite) {

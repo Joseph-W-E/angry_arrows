@@ -1,3 +1,7 @@
+import 'dart:math' as math;
+
+import 'package:angry_arrows/common/common.dart';
+
 /// Interprets arrays of [Points] to determine what the user was trying to do.
 /// Keeps a local history of the gestures, allowing smart gesture detection.
 class GestureInterpreter {
@@ -16,8 +20,9 @@ class GestureInterpreter {
   Gesture interpret(List<Point> points) {
     if (points == null || points.isEmpty) {
       if (_state == State.holdingArrow) {
-        // they let go, launch the arrow
-        // return new LaunchArrow gesture
+        // they let go of the arrow
+        // below doesn't work
+        //return new LaunchArrow(false);
       }
       _history.clear();
       return null;
@@ -51,15 +56,24 @@ class GestureInterpreter {
     if (_state == State.launchingArrow) return null;
 
     var start = _history.first.point;
-    // if start is inside the arrow's hitbox, then we should calculate
-    // how far and to what angle's we've dragged the arrow.
+    var distanceToArrow = _distanceToArrow(start);
 
-    // update the state to State.holdingArrow
+    if (distanceToArrow > 128.0) return null; // [start] is too far away
 
-    // return a new ControlArrow
+    var radians = _angleToArrow(start);
 
-    return null;//new ControlArrow(false, distance: 0.0, radians: 0.0);
+    _state = State.holdingArrow;
+
+    return new ControlArrow(
+      false,
+      distance: distanceToArrow,
+      radians: radians,
+    );
   }
+
+  double _distanceToArrow(Point p) => distanceBetween(p, arrowPoint);
+
+  double _angleToArrow(Point p) => angleBetween(p, arrowPoint);
 
   /// Determines if [_history] can be converted to a [LaunchArrow] gesture.
   LaunchArrow _isLaunchArrowGesture() {
@@ -111,6 +125,9 @@ class Scroll extends Gesture {
 class Point {
   final double x, y;
   Point({this.x, this.y}) : assert(x != null), assert(y != null);
+
+  @override
+  String toString() => '(${x.toStringAsFixed(2)}, ${y.toStringAsFixed(2)})';
 }
 
 enum State {

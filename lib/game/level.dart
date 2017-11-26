@@ -70,8 +70,8 @@ class Levels {
       ];
 
   ArrowConfig get _defaultArrowConfig => new ArrowConfig()
-    ..x = 100.0
-    ..y = _height - 128.0;
+    ..x = 300.0
+    ..y = _height - 400.0;
 
   double get _height => _dimensions.height;
 }

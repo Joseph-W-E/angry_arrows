@@ -61,8 +61,8 @@ class Crate extends SpriteComponent {
 
 class CrateConfig extends Config {
   CrateConfig({double size: 128.0}) : super(
-    width: 128.0,
-    height: 128.0,
+    width: size,
+    height: size,
     angle: 0.0,
   );
 
