@@ -13,22 +13,24 @@ class Level extends Game {
   final Size dimensions;
   final LevelConfiguration config;
 
+  Landscape _landscape;
   Arrow _arrow;
   List<Crate> _crates;
+  List<Platform> _platforms;
 
   List<Point> _points = [];
   GestureInterpreter _interpreter;
 
-  PhysicsHandler _physics;
+  PhysicsHandler _physics = new PhysicsHandler();
 
   Level({this.dimensions, this.config}) : assert(dimensions != null), assert(config != null) {
     _setupSprites();
   }
 
   void _setupSprites() {
-    _arrow = new Arrow(config.arrow);
+    _landscape = new Landscape(config.landscape);
 
-    _physics = new PhysicsHandler(_arrow);
+    _arrow = new Arrow(config.arrow);
 
     _interpreter = new GestureInterpreter(
       arrowPoint: new Point(x: config.arrow.x, y: config.arrow.y),
@@ -39,11 +41,14 @@ class Level extends Game {
 
     _crates = config.crates.map((config) => new Crate(config)).toList();
 
-    // todo setup platforms
+    _platforms = config.platforms.map((config) => new Platform(config)).toList();
   }
 
   @override
   void render(Canvas canvas) {
+    // render the landscape
+    _internalRender(canvas, _landscape);
+
     // render the arrow
     _internalRender(canvas, _arrow);
 
@@ -51,14 +56,33 @@ class Level extends Game {
     _crates.forEach((crate) => _internalRender(canvas, crate));
 
     // render the platforms
-    // todo render the platforms
+    _platforms.forEach((platform) => _internalRender(canvas, platform));
   }
 
   @override
   void update(double t) {
     _handleGesture(t, _interpreter.interpret(_points));
     _interpreter.updateArrowInformation(point: new Point(x: _arrow.x, y: _arrow.y));
-    if (_physics.hasLaunched) _physics.update(t);
+
+    if (_physics.hasLaunched) {
+      _physics.update(t, (PhysicsUpdatePayload payload) {
+        _arrow.x = payload.x;
+        _arrow.y = payload.y;
+        _arrow.angle = payload.radians;
+      });
+
+      // check for collision with crates or platforms
+      for (Crate crate in _crates) {
+        Point arrowPoint = new Point(x: _arrow.x, y: _arrow.y);
+        Point cratePoint = new Point(x: crate.x, y: crate.y);
+        if (distanceBetween(arrowPoint, cratePoint) < 100) {
+          _crates.remove(_crates);
+          _physics.reset();
+          break;
+        }
+      }
+    }
+
     _points.clear();
   }
 
@@ -84,7 +108,7 @@ class Level extends Game {
       if (_physics.hasLaunched) return;
       _arrow.x += gesture.distance;
       _crates.forEach((crate) => crate.x += gesture.distance);
-      // todo move the platforms just like the [_crates]
+      _platforms.forEach((platform) => platform.x += gesture.distance);
 
     } else if (gesture is ControlArrow) {
       _arrow.x += gesture.distance * math.cos(gesture.radians);
@@ -92,10 +116,11 @@ class Level extends Game {
       _arrow.angle = angleBetween(_arrowStartPoint, _currentArrowPoint);
 
     } else if (gesture is LaunchArrow) {
-      // move the arrow to simulate launching
       _physics.launch(
         distance: distanceBetween(_arrowStartPoint, _currentArrowPoint),
         radians: angleBetween(_arrowStartPoint, _currentArrowPoint),
+        x0: config.arrow.x,
+        y0: config.arrow.y,
       );
 
     } else {

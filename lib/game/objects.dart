@@ -15,6 +15,32 @@ abstract class Config {
   String get asset;
 }
 
+class Landscape extends SpriteComponent {
+  Landscape(LandscapeConfig config) : super.rectangle(
+    config.width,
+    config.height,
+    config.asset,
+  ) {
+    x = config.x;
+    y = config.y;
+    angle = config.angle;
+  }
+}
+
+class LandscapeConfig extends Config {
+  LandscapeConfig({double width, double height, double x, double y}) : super(
+    width: width,
+    height: height,
+    angle: 3 / 2 * math.PI,
+  ) {
+    this.x = x;
+    this.y = y;
+  }
+
+  @override
+  String get asset => 'landscape.png';
+}
+
 // //////////////////////////////
 // Arrows
 // //////////////////////////////
@@ -71,66 +97,28 @@ class CrateConfig extends Config {
 }
 
 // //////////////////////////////
-// Platforms todo This doesn't actually work, was just messing around
-// todo - What we should do is create a builder for platforms, so we end up with
-// todo - one component that can be rendered inside the game.
+// Platforms
 // //////////////////////////////
 
 class Platform extends SpriteComponent {
-  final List<PlatformItem> items;
-
-  Platform(this.items) : super.rectangle(
-    items.map((item) => item.width).fold(0.0, (prev, curr) => prev + curr),
-    items.map((item) => item.height).fold(0.0, (prev, curr) => math.max(prev, curr)),
-    'platform.png', // todo obv not correct, but renders
-  );
-}
-
-class PlatformConfig extends Config {
-  List<PlatformItemConfig> _items;
-
-  // todo
-
-  @override
-  String get asset => null;
-}
-
-class PlatformItem extends SpriteComponent {
-  final PlatformItemConfig config;
-
-  PlatformItem(this.config) : super.rectangle(
+  Platform(PlatformConfig config) : super.rectangle(
     config.width,
     config.height,
-    'standaloneTile.png',
-  );
-}
-
-class PlatformItemConfig extends Config {
-  final PlatformPosition position;
-
-  PlatformItemConfig({double size: 128.0, this.position}) : super(
-    width: 128.0,
-    height: 128.0,
-    angle: 0.0,
-  );
-
-  @override
-  String get asset {
-    switch(position) {
-      case PlatformPosition.left:
-        return 'leftTile.png';
-      case PlatformPosition.middle:
-        return 'midTile.png';
-      case PlatformPosition.right:
-        return 'rightTile.png';
-      case PlatformPosition.standalone:
-        return 'standaloneTile.png';
-      default:
-        return 'platform.png';
-    }
+    config.asset,
+  ) {
+    x = config.x;
+    y = config.y;
+    angle = config.angle;
   }
 }
 
-enum PlatformPosition {
-  left, middle, right, standalone
+class PlatformConfig extends Config {
+  PlatformConfig({double size: 500.0}) : super(
+    width: size,
+    height: size / 10,
+    angle: 3 / 2 * math.PI,
+  );
+
+  @override
+  String get asset => 'platform.png';
 }

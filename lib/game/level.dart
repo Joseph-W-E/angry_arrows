@@ -1,11 +1,8 @@
 import 'dart:ui';
 
-import 'package:angry_arrows/game/game.dart';
 import 'package:angry_arrows/game/objects.dart';
 
 /// [Levels] is a resource for levels in the game.
-///
-/// [_dimensions] should ONLY be used for determining height of objects.
 class Levels {
   Size _dimensions;
 
@@ -20,7 +17,7 @@ class Levels {
   ];
 
   LevelConfiguration get level1 => new LevelConfiguration(dimensions: _dimensions)
-      ..arrow = (_defaultArrowConfig)
+      ..arrow = _defaultArrowConfig
       ..crates = [
         new CrateConfig()
           ..x = _dimensions.width - 128
@@ -33,40 +30,46 @@ class Levels {
           ..y = _dimensions.height - 128,
       ]
       ..platforms = [
-        new PlatformItemConfig()
+        new PlatformConfig()
           ..x = 50.0
           ..y = 110.0,
-        new PlatformItemConfig()
+        new PlatformConfig()
           ..x = 100.0
           ..y = 110.0,
-        new PlatformItemConfig()
+        new PlatformConfig()
           ..x = 100.0
           ..y = 110.0,
       ];
 
   LevelConfiguration get level2 => new LevelConfiguration(dimensions: _dimensions)
-      ..arrow = (_defaultArrowConfig)
+      ..landscape = new LandscapeConfig(
+        width: _dimensions.width,
+        height: _dimensions.height,
+        x: _dimensions.width / 2,
+        y: _dimensions.height / 2,
+      )
+      ..arrow = _defaultArrowConfig
       ..crates = [
         new CrateConfig()
           ..x = 2000.0
-          ..y = _height - 128,
+          ..y = _height - 198,
         new CrateConfig()
           ..x = 1600.0
-          ..y = _height - 128,
+          ..y = _height - 198,
         new CrateConfig()
           ..x = 700.0
-          ..y = _height - 128,
+          ..y = _height - 198,
       ]
       ..platforms = [
-        new PlatformItemConfig()
-          ..x = 50.0
-          ..y = 110.0,
-        new PlatformItemConfig()
-          ..x = 100.0
-          ..y = 110.0,
-        new PlatformItemConfig()
-          ..x = 100.0
-          ..y = 110.0,
+        new PlatformConfig()
+          ..x = 2000.0
+          ..y = _height - 110,
+        new PlatformConfig()
+          ..x = 1600.0
+          ..y = _height - 110,
+        new PlatformConfig()
+          ..x = 700.0
+          ..y = _height - 110,
       ];
 
   ArrowConfig get _defaultArrowConfig => new ArrowConfig()
@@ -77,9 +80,10 @@ class Levels {
 }
 
 class LevelConfiguration {
+  LandscapeConfig landscape;
   ArrowConfig arrow;
   List<CrateConfig> crates;
-  List<PlatformItemConfig> platforms;
+  List<PlatformConfig> platforms;
 
   final Size dimensions;
 

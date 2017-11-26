@@ -1,11 +1,10 @@
 import 'dart:math' as math;
 import 'package:angry_arrows/game/objects.dart';
+import 'package:flame/component.dart';
 
 /// [PhysicsHandler] is responsible primarily for launching the arrow.
 class PhysicsHandler {
   static const double _gravity = 100.0;
-
-  Arrow _arrow;
 
   // elapsed time
   double _t = 0.0;
@@ -24,15 +23,15 @@ class PhysicsHandler {
 
   bool _hasLaunched = false;
 
-  PhysicsHandler(this._arrow);
+  PhysicsHandler();
 
   /// Begins the launch on the arrow
-  void launch({double distance, double radians}) {
+  void launch({double distance, double radians, double x0, double y0}) {
     if (distance == null || radians == null) return;
 
     // set the starting position
-    _x0 = _arrow.x;
-    _y0 = _arrow.y;
+    _x0 = x0;
+    _y0 = y0;
 
     // calculate initial velocity
     _vx0 = 2 * distance * math.cos(radians);
@@ -43,14 +42,10 @@ class PhysicsHandler {
 
   bool get hasLaunched => _hasLaunched;
 
-  void update(double tickTime) {
+  void update(double tickTime, OnUpdateCallback onUpdate) {
     _t += tickTime;
 
-    _arrow.x = _x0 + _x;
-    _arrow.y = _y0 - _y;
-    //print('_yp $_yp'); TODO figure out how the hell to get the angle right
-    print('radians ${_yp * math.PI / 180}');
-    _arrow.angle = _yp * math.PI / 180;
+    onUpdate(new PhysicsUpdatePayload(_x0 + _x, _y0 - _y, math.atan(_yp)));
   }
 
   // horizontal distance since the start
@@ -64,6 +59,21 @@ class PhysicsHandler {
 
   /// Resets this object's state.
   void reset() {
-    // todo
+    _t = 0.0;
+    _x0 = 0.0;
+    _y0 = 0.0;
+    _vx0 = 0.0;
+    _vy0 = 0.0;
+    _hasLaunched = false;
   }
+}
+
+typedef void OnUpdateCallback(PhysicsUpdatePayload payload);
+
+class PhysicsUpdatePayload {
+  final double x;
+  final double y;
+  final double radians;
+
+  PhysicsUpdatePayload(this.x, this.y, this.radians);
 }
