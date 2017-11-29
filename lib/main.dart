@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'package:angry_arrows/game/game.dart';
 import 'package:angry_arrows/game/level.dart';
 import 'package:flame/flame.dart';
+import 'package:flutter/services.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 Future<Null> main() async {
@@ -31,6 +32,10 @@ Future<Null> main() async {
     dimensions: dimensions,
     config: levels.level2,
   )..start();
+
+  SystemChrome.setPreferredOrientations([
+    DeviceOrientation.landscapeRight,
+  ]);
 
   // start handling user input
   window.onPointerDataPacket = (PointerDataPacket packet) {
