@@ -9,7 +9,7 @@ import 'package:flutter/material.dart';
 Future<Null> main() async {
   final googleSignIn = new GoogleSignIn();
 
-  signIn(googleSignIn);
+//  signIn(googleSignIn);
 
   // setup preferred landscape
   SystemChrome.setPreferredOrientations([
