@@ -14,31 +14,26 @@ class Levels {
 
   List<LevelConfiguration> get levels => [
     level1,
+    level2,
   ];
 
   LevelConfiguration get level1 => new LevelConfiguration(dimensions: _dimensions)
+      ..landscape = new LandscapeConfig(
+        width: _dimensions.width,
+        height: _dimensions.height,
+        x: _dimensions.width / 2,
+        y: _dimensions.height / 2,
+      )
       ..arrow = _defaultArrowConfig
       ..crates = [
         new CrateConfig()
-          ..x = _dimensions.width - 128
-          ..y = _dimensions.height - 128,
-        new CrateConfig()
-          ..x = _dimensions.width - 500
-          ..y = _dimensions.height - 128,
-        new CrateConfig()
-          ..x = _dimensions.width - 350
-          ..y = _dimensions.height - 128,
+          ..x = 500.0
+          ..y = _height - 198,
       ]
       ..platforms = [
         new PlatformConfig()
-          ..x = 50.0
-          ..y = 110.0,
-        new PlatformConfig()
-          ..x = 100.0
-          ..y = 110.0,
-        new PlatformConfig()
-          ..x = 100.0
-          ..y = 110.0,
+          ..x = 500.0
+          ..y = _height - 110,
       ];
 
   LevelConfiguration get level2 => new LevelConfiguration(dimensions: _dimensions)
