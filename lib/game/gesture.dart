@@ -128,6 +128,14 @@ class Point {
 
   @override
   String toString() => '(${x.toStringAsFixed(2)}, ${y.toStringAsFixed(2)})';
+
+  @override
+  bool operator ==(Object other) {
+    return other is Point && (other.x == this.x && other.y == this.y);
+  }
+
+  @override
+  int get hashCode => "$x,$y".hashCode;
 }
 
 enum State {
