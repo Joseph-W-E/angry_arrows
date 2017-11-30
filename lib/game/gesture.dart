@@ -46,9 +46,14 @@ class GestureInterpreter {
     // Having more than 2 elements acts as a threshold (ignores very subtle inputs)
     if (_history.length <= 2) return null;
 
-    Gesture gesture = _isControlArrowGesture() ?? _isLaunchArrowGesture() ?? _isScrollGesture();
+    Gesture gesture = _isGoBackGesture() ?? _isControlArrowGesture() ?? _isLaunchArrowGesture() ?? _isScrollGesture();
     _history.clear();
     return gesture;
+  }
+
+  GoBack _isGoBackGesture() {
+    var start = _history.first.point;
+    return start.x < 500.0 ? new GoBack(false) : null;
   }
 
   /// Determines if [_history] can be converted to a [ControlArrow] gesture.
@@ -101,6 +106,10 @@ class Gesture {
   final bool isNaive;
   final Point point;
   Gesture(this.isNaive, {this.point});
+}
+
+class GoBack extends Gesture {
+  GoBack(bool isNaive) : super(isNaive);
 }
 
 class ControlArrow extends Gesture {

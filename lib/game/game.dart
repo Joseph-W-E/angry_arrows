@@ -20,7 +20,6 @@ Future<Null> loadGameScene(int level) async {
   // todo figure out how to stop these errors
 
   // setup Flame
-  Flame.util.enableEvents();
   Flame.audio.disableLog();
 
   // setup the levels
@@ -185,19 +184,16 @@ class GameScene extends Game {
     _points.add(new Point(x: x, y: y));
   }
 
-  /// Stops rendering the level.
-  /// This should be called when the user navigates away from the level.
-  void stop() {
-    // todo figure out how to destroy the game and return to normal flutter
-  }
-
   // Determines how to manipulate the objects based off the received [gesture]
   void _handleGesture(double t, Gesture gesture) {
     // we should ignore potentially bad gestures
     // unless they're trying to grab the arrow
     if (gesture == null || (gesture.isNaive && gesture is! ControlArrow)) return;
 
-    if (gesture is Scroll) {
+    if (gesture is GoBack) {
+      unloadGameScene();
+
+    } else if (gesture is Scroll) {
       if (_physics.hasLaunched) return;
       _arrow.x += gesture.distance;
       _crates.forEach((crate) => crate.x += gesture.distance);
