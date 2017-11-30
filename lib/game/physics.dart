@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'package:angry_arrows/game/gesture.dart';
 import 'package:angry_arrows/game/objects.dart';
 import 'package:flame/component.dart';
 
@@ -45,14 +46,40 @@ class PhysicsHandler {
   void update(double tickTime, OnUpdateCallback onUpdate) {
     _t += tickTime;
 
-    onUpdate(new PhysicsUpdatePayload(_x0 + _x, _y0 - _y, math.atan(_yp)));
+    onUpdate(new PhysicsUpdatePayload(_x0 + getX(_vx0, _t), _y0 - getY(_vy0, _t), math.atan(getYPrime(_vy0, _t))));
   }
 
-  // horizontal distance since the start
-  double get _x => _vx0 * _t;
+  List<Point> getArchProjection({double distance, double radians, double x0, double y0}) {
+    var points = <Point>[];
 
-  // vertical distance since the start
-  double get _y => _vy0 * _t - 0.5 * _gravity * math.pow(_t, 2);
+    // calculate initial velocity
+    var vx0 = 2 * distance * math.cos(radians);
+    var vy0 = -2 * distance * math.sin(radians);
+
+    for (var t = 0.0; t < 15.0; t += 0.2) {
+      points.add(
+          new Point(
+            x: vx0 * t,
+            y: vy0 * t - 0.5 * _gravity * math.pow(t, 2)
+          )
+      );
+    }
+
+    return points;
+  }
+
+  double getInitialXVelocity(double distance, double radians) =>
+      2 * distance * math.cos(radians);
+
+  double getInitialYVelocity(double distance, double radians) =>
+      -2 * distance * math.sin(radians);
+
+  // horizontal distance since the start
+  double getX(double vx0, double t) => vx0 * t;
+
+  double getY(double vy0, double t) => vy0 * t - 0.5 * _gravity * math.pow(t, 2);
+
+  double getYPrime(double vy0, double t) => vy0 - _gravity * t;
 
   // derivative of [_y]
   double get _yp => _vy0 - _gravity * _t;

@@ -9,6 +9,8 @@ import 'package:angry_arrows/game/physics.dart';
 import 'package:flame/component.dart';
 import 'package:flame/game.dart';
 
+typedef void CanvasStroker(Canvas c);
+
 class Level extends Game {
   final Size dimensions;
   final LevelConfiguration config;
@@ -47,16 +49,51 @@ class Level extends Game {
   @override
   void render(Canvas canvas) {
     // render the landscape
-    _internalRender(canvas, _landscape);
+    _internalRenderSprite(canvas, _landscape);
 
     // render the arrow
-    _internalRender(canvas, _arrow);
+    _internalRenderSprite(canvas, _arrow);
+
+    // render launch info
+    if (_currentArrowPoint != _arrowStartPoint && !_physics.hasLaunched) {
+      var d = distanceBetween(_currentArrowPoint, _arrowStartPoint);
+
+      var lineCreator = (Canvas c) {
+        var thickness = (math.max(1.0, d) / 64.0).clamp(1.0, 20.0);
+        c.drawLine(new Offset(_currentArrowPoint.x, _currentArrowPoint.y),
+            new Offset(_arrowStartPoint.x, _arrowStartPoint.y),
+            new Paint()
+              ..color = new Color.fromRGBO(255, 0, 0, 1.0)
+              ..strokeWidth = thickness
+        );
+      };
+
+      var arcCreator = (Canvas c) {
+        var points = _physics.getArchProjection(
+          distance: distanceBetween(_arrowStartPoint, _currentArrowPoint),
+          radians: angleBetween(_arrowStartPoint, _currentArrowPoint),
+          x0: _arrowStartPoint.x,
+          y0: _arrowStartPoint.y,
+        );
+
+        for (var point in points) {
+          canvas.drawCircle(new Offset(point.x, point.y), 3.0,
+              new Paint()
+                ..color = new Color.fromRGBO(255, 0, 0, 1.0)
+                ..strokeWidth = 2.0
+          );
+        }
+      };
+
+      _internalRenderStroke(canvas, lineCreator);
+      _internalRenderStroke(canvas, arcCreator);
+    }
 
     // render the crates
-    _crates.forEach((crate) => _internalRender(canvas, crate));
+    _crates.forEach((crate) => _internalRenderSprite(canvas, crate));
 
     // render the platforms
-    _platforms.forEach((platform) => _internalRender(canvas, platform));
+    _platforms.forEach((platform) => _internalRenderSprite(canvas, platform));
   }
 
   @override
@@ -132,7 +169,15 @@ class Level extends Game {
   Point get _currentArrowPoint => new Point(x: _arrow.x, y: _arrow.y);
 
   // Renders the [sprite] on the [canvas].
-  void _internalRender(Canvas canvas, SpriteComponent sprite) {
+  void _internalRenderStroke(Canvas canvas, CanvasStroker updater) {
+    canvas.save();
+    updater?.call(canvas);
+    canvas.restore();
+    canvas.save();
+  }
+
+  // Renders the [sprite] on the [canvas].
+  void _internalRenderSprite(Canvas canvas, SpriteComponent sprite) {
     canvas.save();
     sprite.render(canvas);
     canvas.restore();
