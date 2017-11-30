@@ -9,6 +9,8 @@ import 'package:angry_arrows/game/physics.dart';
 import 'package:flame/component.dart';
 import 'package:flame/game.dart';
 
+typedef void GoHome();
+
 class Level extends Game {
   final Size dimensions;
   final LevelConfiguration config;
@@ -23,7 +25,9 @@ class Level extends Game {
 
   PhysicsHandler _physics = new PhysicsHandler();
 
-  Level({this.dimensions, this.config}) : assert(dimensions != null), assert(config != null) {
+  GoHome goHome;
+
+  Level({this.dimensions, this.config, this.goHome}) : assert(dimensions != null), assert(config != null) {
     _setupSprites();
   }
 
@@ -48,6 +52,21 @@ class Level extends Game {
   void render(Canvas canvas) {
     // render the landscape
     _internalRender(canvas, _landscape);
+
+    canvas.save();
+    var builder = new ParagraphBuilder(new ParagraphStyle(
+      textAlign: TextAlign.center,
+      fontWeight: FontWeight.w900,
+      fontStyle: FontStyle.normal,
+      fontSize: 128.0,
+    ))..addText("Start");
+
+    var text = builder.build();
+    text.layout(new ParagraphConstraints(width: 300.0));
+
+    canvas.drawParagraph(text, new Offset(500.0, 500.0));
+    canvas.restore();
+    canvas.save();
 
     // render the arrow
     _internalRender(canvas, _arrow);
@@ -89,6 +108,9 @@ class Level extends Game {
   /// Accepts user input (typically a touch).
   /// [x] and [y] are the coordinates of the input.
   void input(double x, double y) {
+    if (x < 1000.0) {
+      goHome();
+    }
     _points.add(new Point(x: x, y: y));
   }
 
