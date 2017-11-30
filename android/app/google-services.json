@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "1025156271464",
+    "firebase_url": "https://angry-arrows.firebaseio.com",
+    "project_id": "angry-arrows",
+    "storage_bucket": "angry-arrows.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1025156271464:android:cde9bc4b0f5a5e3b",
+        "android_client_info": {
+          "package_name": "com.coffeecrew.angryarrows"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1025156271464-bkivv1jfe61o0rmv1mk44e2vmn1knah8.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCukeIjsK3Cuu8s1SsD_LwZhutMcUA-NIM"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
