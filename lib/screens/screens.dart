@@ -46,6 +46,10 @@ class _HomeScreenState extends State<HomeScreen> {
   void _handleStartOnPress() => loadGameScene(widget.levels, 1);
 
   void _handleLevelsOnPress() {
+    firebase.writeScore(
+      level: 999,
+      score: 555,
+    );
     Navigator.of(context).push(
       new MaterialPageRoute<Null>(builder: (BuildContext context) {
         return new LevelsScreen(widget.levels);
