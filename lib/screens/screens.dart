@@ -102,7 +102,7 @@ class _LevelsScreenState extends State<LevelsScreen> {
 
     for (var i = 1; i <= 30; i++) {
       var isValid = i - 1 < levels.levels.length;
-      var isEnabled = i <= prefs?.getInt("CURRENT_LEVEL_INT") ?? 2;
+      var isEnabled = i <= (prefs?.getInt("CURRENT_LEVEL_INT") ?? 2);
 
       levelPreviews.add(
         new GestureDetector(
