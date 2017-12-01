@@ -1,6 +1,8 @@
 import 'dart:async';
 
+import 'package:angry_arrows/game/level.dart';
 import 'package:angry_arrows/screens/screens.dart';
+import 'package:flame/flame.dart';
 
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter/services.dart';
@@ -16,13 +18,21 @@ Future<Null> main() async {
     DeviceOrientation.landscapeLeft,
   ]);
 
+  // setup Flame
+  Flame.util.enableEvents();
+  Flame.audio.disableLog();
+
+  // setup the levels
+  var dimensions = await Flame.util.initialDimensions();
+  var levels = new Levels(dimensions);
+
   // boot up the home screen
-  loadHomeScreen();
+  loadHomeScreen(levels);
 }
 
-void loadHomeScreen() => runApp(new MaterialApp(
+void loadHomeScreen(Levels levels) => runApp(new MaterialApp(
     home: new Scaffold(
-      body: new HomeScreen(),
+      body: new HomeScreen(levels),
     ),
   ));
 

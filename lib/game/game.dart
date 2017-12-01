@@ -15,22 +15,16 @@ typedef void CanvasStroker(Canvas c);
 
 GameScene activeGameScene;
 
-Future<Null> loadGameScene(int level) async {
+Future<Null> loadGameScene(Levels levels, int levelToStart) async {
   // todo this is causing a shit load of errors to print in the stack trace
   // todo figure out how to stop these errors
 
-  // setup Flame
-  Flame.util.enableEvents();
-  Flame.audio.disableLog();
-
-  // setup the levels
   var dimensions = await Flame.util.initialDimensions();
-  var levels = new Levels(dimensions);
 
   // start the game
   activeGameScene = new GameScene(
     dimensions: dimensions,
-    config: levels.getLevel(level),
+    config: levels.getLevel(levelToStart),
   )..start();
 
   // start handling user input
