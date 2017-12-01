@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:angry_arrows/game/game.dart';
 import 'package:angry_arrows/game/level.dart';
+import 'package:angry_arrows/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:async_loader/async_loader.dart';
@@ -23,18 +24,44 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // todo theme things (maybe add background?)
-    return new Container(
+    return new Scaffold(
+      body: new Container(
         alignment: FractionalOffset.center,
-        margin: const EdgeInsets.all(64.0),
-        child: new Column(
-          children: <Widget>[
-            _buildButton('Start', _handleStartOnPress),
-            _buildButton('Levels', _handleLevelsOnPress),
-            _buildButton('Settings', _handleSettingsOnPress),
-            _buildButton('Log Out', _handleLogOutOnPress),
-          ],
-        ));
+        decoration: const BoxDecoration(
+          image: const DecorationImage(
+            fit: BoxFit.fill,
+            image: const AssetImage("assets/images/landscape.png"),
+          ),
+        ),
+        child: new Container(
+          margin: const EdgeInsets.fromLTRB(64.0, 0.0, 64.0, 16.0),
+          child: new Column(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              new Container(
+                margin: const EdgeInsets.only(top: 40.0),
+                decoration: const BoxDecoration(
+                    color: const Color.fromRGBO(0, 0, 0, 0.4)),
+                child: new Text(
+                  "Angry Arrows >:(",
+                  // Todo - figure out why fonts aren't displaying
+                  style: const TextStyle(
+                    fontSize: 64.0,
+                    color: Colors.white,
+                    package: "angry_arrows",
+                    fontFamily: "yatra",
+                  ),
+                ),
+              ),
+              _buildButton('Start', _handleStartOnPress),
+              _buildButton('Levels', _handleLevelsOnPress),
+              _buildButton('Settings', _handleSettingsOnPress),
+              _buildButton('Log Out', _handleLogOutOnPress),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   void _handleStartOnPress() => loadGameScene(levels, 1);
@@ -63,9 +90,54 @@ class _HomeScreenState extends State<HomeScreen> {
     return new Container(
       child: new FlatButton(
         onPressed: onPress,
-        child: new Text(
-          text,
-          style: const TextStyle(),
+        child: new Stack(
+          overflow: Overflow.visible,
+          children: <Widget>[
+            new Opacity(
+              opacity: 0.69,
+              child: new Container(
+                decoration: const BoxDecoration(
+                  color: Colors.black,
+                  borderRadius: const BorderRadius.all(
+                    const Radius.circular(25.0),
+                  ),
+                ),
+                child: new ConstrainedBox(
+                  constraints:
+                      const BoxConstraints(minWidth: 800.0, minHeight: 50.0),
+                  child: new Container(),
+                ),
+              ),
+            ),
+            new Positioned(
+              top: -7.0,
+              child: new Container(
+                constraints: new BoxConstraints(
+                  maxHeight: 64.0,
+                  maxWidth: 80.0,
+                ),
+                decoration: new BoxDecoration(
+                  image: new DecorationImage(
+                    image: const AssetImage("assets/images/crate.png"),
+                  ),
+                ),
+              ),
+            ),
+            new Positioned(
+              top: 17.0,
+              bottom: 25.0,
+              left: 100.0,
+              child: new Text(
+                text.toUpperCase(),
+                // Todo - figure out why fonts aren't displaying
+                style: const TextStyle(
+                  color: Colors.white,
+                  package: "angry_arrows",
+                  fontFamily: "Marker",
+                ),
+              ),
+            )
+          ],
         ),
       ),
     );
@@ -90,46 +162,38 @@ class _LevelsScreenState extends State<LevelsScreen> {
       new GlobalKey<AsyncLoaderState>();
 
   Widget _renderLevelSelect(BuildContext c) {
-    var levelPreviews = <Widget>[];
+    var levelPreviews = <Widget>[
+      new BoxItem(
+          text: "Main Menu",
+          fontSize: 20.0,
+          isEnabled: true,
+          isValid: true,
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          scaffoldContext: c)
+    ];
 
     for (var i = 1; i <= 30; i++) {
       var isValid = i - 1 < levels.levels.length;
       var isEnabled = i <= prefs?.getInt("CURRENT_LEVEL_INT") ?? 2;
 
       levelPreviews.add(
-        new GestureDetector(
-          onTapUp: ((_) {
-            if (isEnabled && !isValid) {
-              Scaffold.of(c).showSnackBar(const SnackBar(
-                  content: const Text(
-                      "This level doesn't actually exist.  This is not an error.")));
-            } else if (isEnabled) {
-              Navigator.pop(context);
-              loadGameScene(levels, i);
-            }
-          }),
-          child: new Opacity(
-            opacity: isEnabled ? 1.0 : 0.5,
-            child: new DecoratedBox(
-              decoration: new BoxDecoration(
-                image: new DecorationImage(
-                  image: new AssetImage("assets/images/crate.png"),
-                  fit: BoxFit.fill,
-                ),
-              ),
-              key: new Key("$i"),
-              child: new Center(
-                child: new Text(
-                  "$i",
-                  style: new TextStyle(
-                    fontWeight: isEnabled ? FontWeight.bold : FontWeight.normal,
-                    fontSize: 48.0,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
+        new BoxItem(
+            text: "$i",
+            isEnabled: isEnabled,
+            isValid: isValid,
+            onPressed: () {
+              if (isEnabled && !isValid) {
+                Scaffold.of(c).showSnackBar(const SnackBar(
+                    content: const Text(
+                        "This level doesn't actually exist.  This is not an error.")));
+              } else if (isEnabled) {
+                Navigator.pop(context);
+                loadGameScene(widget.levels, i);
+              }
+            },
+            scaffoldContext: c),
       );
     }
     return new GridView.count(
