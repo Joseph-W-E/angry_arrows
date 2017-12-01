@@ -67,13 +67,13 @@ class FirebaseAdapter {
       await _google.signIn();
       _analytics.logLogin();
     }
-//    if (await _auth.currentUser() == null) {
-//      var credentials = await _google.currentUser.authentication;
-//      await _auth.signInWithGoogle(
-//        idToken: credentials.idToken,
-//        accessToken: credentials.accessToken,
-//      );
-//    }
+    if (await _auth.currentUser() == null) {
+      var credentials = await _google.currentUser.authentication;
+      await _auth.signInWithGoogle(
+        idToken: credentials.idToken,
+        accessToken: credentials.accessToken,
+      );
+    }
   }
 
   Future _googleSignOut() async {
