@@ -7,6 +7,10 @@ dependencies:
   google_sign_in: ^1.0.1
   shared_preferences: ^0.2.5
   async_loader: ^0.1.0
+  flame:
+    git:
+      url: git@github.com:Joseph-W-E/flame.git
+      ref: game_stop
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -15,7 +19,10 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flame: 0.6.2
+
+#dependency_overrides:
+#  flame:
+#    path: ../flame/
 
 
 # For information on the generic Dart part of this file, see the
