@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:angry_arrows/data/firebase_adapter.dart';
 import 'package:angry_arrows/game/game.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -15,6 +16,13 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  @override
+  void initState() {
+    super.initState();
+
+    firebase.login();
+  }
+
   @override
   Widget build(BuildContext context) {
     // todo theme things (maybe add background?)
@@ -34,7 +42,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void _handleStartOnPress() => loadGameScene(1);
 
   // todo route to new screen (level select)
-  void _handleLevelsOnPress() => print('levels on press');
+  void _handleLevelsOnPress() => firebase.writeScore(level: 999, score: 555);
 
   // todo route to new screen (settings)
   _handleSettingsOnPress() async {
