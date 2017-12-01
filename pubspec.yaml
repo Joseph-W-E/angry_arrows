@@ -4,7 +4,10 @@ description: A Flutter based game.
 dependencies:
   flutter:
     sdk: flutter
-  google_sign_in: ^1.0.1
+  google_sign_in: 0.3.1
+  firebase_analytics: 0.0.4
+  firebase_auth: 0.2.5
+  firebase_database: 0.0.12
   shared_preferences: ^0.2.5
   async_loader: ^0.1.0
   flame:
