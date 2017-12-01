@@ -10,17 +10,15 @@ import 'package:async_loader/async_loader.dart';
 typedef void OnPress();
 
 class HomeScreen extends StatefulWidget {
-  Levels levels;
+  final Levels levels;
+
   HomeScreen(this.levels);
 
   @override
-  State<StatefulWidget> createState() => new _HomeScreenState(levels);
+  State<StatefulWidget> createState() => new _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  Levels levels;
-
-  _HomeScreenState(this.levels);
 
   @override
   void initState() {
@@ -45,12 +43,12 @@ class _HomeScreenState extends State<HomeScreen> {
         ));
   }
 
-  void _handleStartOnPress() => loadGameScene(levels, 1);
+  void _handleStartOnPress() => loadGameScene(widget.levels, 1);
 
   void _handleLevelsOnPress() {
     Navigator.of(context).push(
       new MaterialPageRoute<Null>(builder: (BuildContext context) {
-        return new LevelsScreen(levels);
+        return new LevelsScreen(widget.levels);
       }),
     );
   }
@@ -81,17 +79,15 @@ class _HomeScreenState extends State<HomeScreen> {
 }
 
 class LevelsScreen extends StatefulWidget {
-  Levels levels;
+  final Levels levels;
+
   LevelsScreen(this.levels);
 
   @override
-  State<StatefulWidget> createState() => new _LevelsScreenState(levels);
+  State<StatefulWidget> createState() => new _LevelsScreenState();
 }
 
 class _LevelsScreenState extends State<LevelsScreen> {
-  Levels levels;
-  _LevelsScreenState(this.levels);
-
   SharedPreferences prefs;
 
   final GlobalKey<AsyncLoaderState> _asyncLoaderState =
@@ -101,7 +97,7 @@ class _LevelsScreenState extends State<LevelsScreen> {
     var levelPreviews = <Widget>[];
 
     for (var i = 1; i <= 30; i++) {
-      var isValid = i - 1 < levels.levels.length;
+      var isValid = i - 1 < widget.levels.levels.length;
       var isEnabled = i <= (prefs?.getInt("CURRENT_LEVEL_INT") ?? 2);
 
       levelPreviews.add(
@@ -113,7 +109,7 @@ class _LevelsScreenState extends State<LevelsScreen> {
                       "This level doesn't actually exist.  This is not an error.")));
             } else if (isEnabled) {
               Navigator.pop(context);
-              loadGameScene(levels, i);
+              loadGameScene(widget.levels, i);
             }
           }),
           child: new Opacity(
