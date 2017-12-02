@@ -25,9 +25,11 @@ class FirebaseAdapter {
   // Data storage
   // //////////////////////////////
 
+  DatabaseReference get _levels => _database.reference().child('levels');
+
   /// Writes that the user has completed [level] with the given [score].
   void writeScore({int level, int score}) {
-    _database.reference().child('database').push().set({
+    _levels.push().set({
       'level': '$level',
       'score': '$score',
     });
