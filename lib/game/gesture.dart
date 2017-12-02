@@ -8,13 +8,12 @@ class GestureInterpreter {
   List<Gesture> _history = [];
 
   Point arrowPoint;
-  double arrowWidth;
-  double arrowHeight;
-  double arrowRadians;
+
+  Point backButtonPoint;
 
   State _state = State.none;
 
-  GestureInterpreter({this.arrowPoint, this.arrowWidth, this.arrowHeight, this.arrowRadians});
+  GestureInterpreter({this.arrowPoint, this.backButtonPoint});
 
   /// Generates a [Gesture] from the given [points].
   Gesture interpret(List<Point> points) {
@@ -34,11 +33,8 @@ class GestureInterpreter {
   }
 
   /// Should be called if the arrow changes location or size.
-  void updateArrowInformation({Point point, double width, double height, double radians}) {
+  void updateArrowLocation({Point point}) {
     arrowPoint = point ?? arrowPoint;
-    arrowWidth = width ?? arrowWidth;
-    arrowHeight = height ?? arrowHeight;
-    arrowRadians = radians ?? arrowRadians;
   }
 
   /// Determines what gesture to send back.
@@ -51,9 +47,10 @@ class GestureInterpreter {
     return gesture;
   }
 
+  /// Determines if [_history] can be converted to a [GoBack] gesture.
   GoBack _isGoBackGesture() {
     var start = _history.first.point;
-    return start.x < 500.0 ? new GoBack(false) : null;
+    return distanceBetween(start, backButtonPoint) < 400.0 ? new GoBack(false) : null;
   }
 
   /// Determines if [_history] can be converted to a [ControlArrow] gesture.

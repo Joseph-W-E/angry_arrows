@@ -18,6 +18,7 @@ class Levels {
   ];
 
   LevelConfiguration get level1 => new LevelConfiguration(dimensions: _dimensions)
+      ..level = 1
       ..landscape = new LandscapeConfig(
         width: _dimensions.width,
         height: _dimensions.height,
@@ -37,6 +38,7 @@ class Levels {
       ];
 
   LevelConfiguration get level2 => new LevelConfiguration(dimensions: _dimensions)
+      ..level = 2
       ..landscape = new LandscapeConfig(
         width: _dimensions.width,
         height: _dimensions.height,
@@ -75,6 +77,7 @@ class Levels {
 }
 
 class LevelConfiguration {
+  int level;
   LandscapeConfig landscape;
   ArrowConfig arrow;
   List<CrateConfig> crates;
