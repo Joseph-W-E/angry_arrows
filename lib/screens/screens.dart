@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:angry_arrows/data/firebase_adapter.dart';
 import 'package:angry_arrows/game/game.dart';
-import 'package:angry_arrows/game/level.dart';
+import 'package:angry_arrows/game/objects/level.dart';
 import 'package:angry_arrows/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -92,10 +92,8 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // todo log out of google account
-  void _handleLogOutOnPress() => print('log out on press');
+  void _handleLogOutOnPress() => firebase.logout();
 
-  // todo style containers for game theme
   Widget _buildButton(String text, OnPress onPress) {
     return new Container(
       child: new FlatButton(

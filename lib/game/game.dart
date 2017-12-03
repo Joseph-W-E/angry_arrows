@@ -2,12 +2,12 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'dart:ui';
 
-import 'package:angry_arrows/common/common.dart';
-import 'package:angry_arrows/game/gesture.dart';
-import 'package:angry_arrows/game/hud.dart';
-import 'package:angry_arrows/game/level.dart';
-import 'package:angry_arrows/game/objects.dart';
-import 'package:angry_arrows/game/physics.dart';
+import 'package:angry_arrows/game/input/gesture.dart';
+import 'package:angry_arrows/game/objects/hud.dart';
+import 'package:angry_arrows/game/objects/level.dart';
+import 'package:angry_arrows/game/objects/objects.dart';
+import 'package:angry_arrows/game/physics/formulas.dart';
+import 'package:angry_arrows/game/physics/physics.dart';
 import 'package:flame/component.dart';
 import 'package:flame/flame.dart';
 import 'package:flame/game.dart';
@@ -88,7 +88,8 @@ class GameScene extends Game {
     _internalRenderHudText(new HudInfo(
       text: '${config.level}',
       canvas: canvas,
-      point: new Point(x: dimensions.width - 200.0, y: dimensions.height - 200.0),
+      x: dimensions.width - 200.0,
+      y: dimensions.height - 200.0,
       width: 200.0,
     ), Hud.drawText);
 
@@ -96,7 +97,8 @@ class GameScene extends Game {
     _internalRenderHudText(new HudInfo(
       text: 'Menu',
       canvas: canvas,
-      point: new Point(x: dimensions.width - 400.0, y: 100.0),
+      x: dimensions.width - 400.0,
+      y: 100.0,
       width: 400.0,
     ), Hud.drawText);
 
@@ -105,7 +107,7 @@ class GameScene extends Game {
 
     // render launch info todo move this to it's own function, maybe in physics.dart?
     if (_currentArrowPoint != _arrowStartPoint && !_physics.hasLaunched) {
-      var d = distanceBetween(_currentArrowPoint, _arrowStartPoint);
+      var d = Formulas.distanceBetween(_currentArrowPoint, _arrowStartPoint);
 
       var lineCreator = (Canvas c) {
         var thickness = (math.max(1.0, d) / 64.0).clamp(1.0, 20.0);
@@ -119,8 +121,8 @@ class GameScene extends Game {
 
       var arcCreator = (Canvas c) {
         var points = _physics.getArchProjection(
-          distance: distanceBetween(_arrowStartPoint, _currentArrowPoint),
-          radians: angleBetween(_arrowStartPoint, _currentArrowPoint),
+          distance: Formulas.distanceBetween(_arrowStartPoint, _currentArrowPoint),
+          radians: Formulas.angleBetween(_arrowStartPoint, _currentArrowPoint),
           x0: _arrowStartPoint.x,
           y0: _arrowStartPoint.y,
         );
@@ -161,7 +163,7 @@ class GameScene extends Game {
       for (Crate crate in _crates) {
         Point arrowPoint = new Point(x: _arrow.x, y: _arrow.y);
         Point cratePoint = new Point(x: crate.x, y: crate.y);
-        if (distanceBetween(arrowPoint, cratePoint) < 100) {
+        if (Formulas.distanceBetween(arrowPoint, cratePoint) < 100) {
           // todo correctly update the ui
           _crates.remove(_crates);
           _physics.reset();
@@ -199,12 +201,12 @@ class GameScene extends Game {
     } else if (gesture is ControlArrow) {
       _arrow.x += gesture.distance * math.cos(gesture.radians);
       _arrow.y += gesture.distance * math.sin(gesture.radians);
-      _arrow.angle = angleBetween(_arrowStartPoint, _currentArrowPoint);
+      _arrow.angle = Formulas.angleBetween(_arrowStartPoint, _currentArrowPoint);
 
     } else if (gesture is LaunchArrow) {
       _physics.launch(
-        distance: distanceBetween(_arrowStartPoint, _currentArrowPoint),
-        radians: angleBetween(_arrowStartPoint, _currentArrowPoint),
+        distance: Formulas.distanceBetween(_arrowStartPoint, _currentArrowPoint),
+        radians: Formulas.angleBetween(_arrowStartPoint, _currentArrowPoint),
         x0: config.arrow.x,
         y0: config.arrow.y,
       );

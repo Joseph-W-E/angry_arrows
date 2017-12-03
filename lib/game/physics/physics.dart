@@ -1,7 +1,6 @@
 import 'dart:math' as math;
-import 'package:angry_arrows/game/gesture.dart';
-import 'package:angry_arrows/game/objects.dart';
-import 'package:flame/component.dart';
+
+import 'package:angry_arrows/game/physics/formulas.dart';
 
 /// [PhysicsHandler] is responsible primarily for launching the arrow.
 class PhysicsHandler {

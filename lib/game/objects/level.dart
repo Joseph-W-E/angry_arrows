@@ -1,6 +1,6 @@
 import 'dart:ui';
 
-import 'package:angry_arrows/game/objects.dart';
+import 'package:angry_arrows/game/objects/objects.dart';
 
 /// [Levels] is a resource for levels in the game.
 class Levels {

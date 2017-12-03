@@ -1,16 +1,21 @@
-import 'dart:math' as math;
-
-import 'package:angry_arrows/common/common.dart';
+import 'package:angry_arrows/game/physics/formulas.dart';
 
 /// Interprets arrays of [Points] to determine what the user was trying to do.
 /// Keeps a local history of the gestures, allowing smart gesture detection.
 class GestureInterpreter {
   List<Gesture> _history = [];
 
+  // location of the point the arrow is centered around
+  Point originPoint;
+
+  // location of the point the arrow is currently at
   Point arrowPoint;
 
+  // location of the point the back button is located
+  // note that this point is not affected by scrolling
   Point backButtonPoint;
 
+  // the current state of the arrow
   State _state = State.none;
 
   GestureInterpreter({this.arrowPoint, this.backButtonPoint});
@@ -50,7 +55,7 @@ class GestureInterpreter {
   /// Determines if [_history] can be converted to a [GoBack] gesture.
   GoBack _isGoBackGesture() {
     var start = _history.first.point;
-    return distanceBetween(start, backButtonPoint) < 400.0 ? new GoBack(false) : null;
+    return Formulas.distanceBetween(start, backButtonPoint) < 400.0 ? new GoBack(false) : null;
   }
 
   /// Determines if [_history] can be converted to a [ControlArrow] gesture.
@@ -73,9 +78,9 @@ class GestureInterpreter {
     );
   }
 
-  double _distanceToArrow(Point p) => distanceBetween(p, arrowPoint);
+  double _distanceToArrow(Point p) => Formulas.distanceBetween(p, arrowPoint);
 
-  double _angleToArrow(Point p) => angleBetween(p, arrowPoint);
+  double _angleToArrow(Point p) => Formulas.angleBetween(p, arrowPoint);
 
   /// Determines if [_history] can be converted to a [LaunchArrow] gesture.
   LaunchArrow _isLaunchArrowGesture() {
@@ -127,22 +132,6 @@ class Scroll extends Gesture {
 // //////////////////////////////
 // Other
 // //////////////////////////////
-
-class Point {
-  final double x, y;
-  Point({this.x, this.y}) : assert(x != null), assert(y != null);
-
-  @override
-  String toString() => '(${x.toStringAsFixed(2)}, ${y.toStringAsFixed(2)})';
-
-  @override
-  bool operator ==(Object other) {
-    return other is Point && (other.x == this.x && other.y == this.y);
-  }
-
-  @override
-  int get hashCode => "$x,$y".hashCode;
-}
 
 enum State {
   none, holdingArrow, launchingArrow
