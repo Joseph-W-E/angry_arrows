@@ -89,7 +89,7 @@ class GestureInterpreter {
     if (_data.change != PointerChange.up) return null;
 
     var distance = Formulas.distanceBetween(new Point.fromPointerData(_data), _backButtonPoint);
-    return distance < 200.0 ? new GoBack() : null;
+    return distance < 200.0 ? new GoBack(data: _data) : null;
   }
 
   Restart _isRestartGesture() {
@@ -98,7 +98,7 @@ class GestureInterpreter {
     if (_data.change != PointerChange.up) return null;
 
     var distance = Formulas.distanceBetween(new Point.fromPointerData(_data), _restartButtonPoint);
-    return distance < 300.0 ? new Restart() : null;
+    return distance < 300.0 ? new Restart(data: _data) : null;
   }
 
   /// Determines if [_history] can be converted to a [ControlArrow] gesture.
@@ -117,8 +117,9 @@ class GestureInterpreter {
     _state = State.holdingArrow;
 
     return new ControlArrow(
+      data: _data,
       distance: Formulas.distanceBetween(dataPoint, _originPoint),
-      radians: Formulas.angleBetween(_arrowPoint, _originPoint),
+      radians: Formulas.angleBetween(dataPoint, _originPoint),
     );
   }
 
@@ -129,7 +130,7 @@ class GestureInterpreter {
     // they didn't let go, so we can't launch yet
     if (_data.change != PointerChange.up) return null;
 
-    return new LaunchArrow();
+    return new LaunchArrow(data: _data);
   }
 
   /// Determines if [_history] can be converted to a [Scroll] gesture.
@@ -148,7 +149,7 @@ class GestureInterpreter {
     var start = _previousData.physicalX;
     var end = _data.physicalX;
     var distance = end - start;
-    return new Scroll(distance: distance);
+    return new Scroll(data: _data, distance: distance);
   }
 }
 
@@ -168,35 +169,41 @@ class Gesture {
 
 typedef void GoBackHandler(GoBack gesture);
 
-class GoBack extends Gesture {}
+class GoBack extends Gesture {
+  GoBack({PointerData data}) : super(data: data);
+}
 
 typedef void RestartHandler(Restart gesture);
 
-class Restart extends Gesture {}
+class Restart extends Gesture {
+  Restart({PointerData data}) : super(data: data);
+}
 
 typedef void ControlArrowHandler(ControlArrow gesture);
 
 class ControlArrow extends Gesture {
   final double distance;
   final double radians;
-  ControlArrow({this.distance, this.radians});
+  ControlArrow({PointerData data, this.distance, this.radians}) : super(data: data);
 
   @override
-  String toString() => '${super.toString()}, ${distance.toStringAsPrecision(2)}, ${radians.toStringAsPrecision(2)}';
+  String toString() => '${super.toString()}, ${distance.toStringAsFixed(2)}, ${radians.toStringAsPrecision(2)}';
 }
 
 typedef void LaunchArrowHandler(LaunchArrow gesture);
 
-class LaunchArrow extends Gesture {}
+class LaunchArrow extends Gesture {
+  LaunchArrow({PointerData data}) : super(data: data);
+}
 
 typedef void ScrollHandler(Scroll gesture);
 
 class Scroll extends Gesture {
   final double distance;
-  Scroll({this.distance});
+  Scroll({PointerData data, this.distance}) : super(data: data);
 
   @override
-  String toString() => '${super.toString()}, ${distance.toStringAsPrecision(2)}';
+  String toString() => '${super.toString()}, ${distance.toStringAsFixed(2)}';
 }
 
 // //////////////////////////////

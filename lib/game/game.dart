@@ -74,6 +74,7 @@ class GameScene extends Game {
       ),
       gestureHandler: _handleGesture,
       goBackHandler: _handleGoBack,
+      restartHandler: _handleRestart,
       controlArrowHandler: _handleControlArrow,
       launchArrowHandler: _handleLaunchArrow,
       scrollHandler: _handleScroll,
@@ -198,8 +199,9 @@ class GameScene extends Game {
   void _handleRestart(_) => print('todo restart');
 
   void _handleControlArrow(ControlArrow gesture) {
-    _arrow.x += gesture.distance * math.cos(gesture.radians);
-    _arrow.y += gesture.distance * math.sin(gesture.radians);
+    print('gesture: $gesture');
+    _arrow.x = _arrowStartPoint.x + gesture.distance * math.cos(gesture.radians);
+    _arrow.y = _arrowStartPoint.y + gesture.distance * math.sin(gesture.radians);
     _arrow.angle = Formulas.angleBetween(_arrowStartPoint, _currentArrowPoint);
   }
 
