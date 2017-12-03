@@ -1,5 +1,7 @@
 import 'dart:math' as math;
 
+import 'dart:ui';
+
 class Formulas {
   static const double gravity = 100.0;
 
@@ -30,7 +32,10 @@ class Formulas {
 
 class Point {
   final double x, y;
+
   Point({this.x, this.y}) : assert(x != null), assert(y != null);
+
+  Point.fromPointerData(PointerData data) : x = data.physicalX, y = data.physicalY;
 
   @override
   String toString() => '(${x.toStringAsFixed(2)}, ${y.toStringAsFixed(2)})';
