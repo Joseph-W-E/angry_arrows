@@ -58,7 +58,8 @@ class GameScene extends Game {
   int _totalAmountOfCrates = 0;
   int _timesLaunched = 0;
 
-  GameScene({@required this.dimensions, @required this.config, this.onGameComplete}) {
+  GameScene(
+      {@required this.dimensions, @required this.config, this.onGameComplete}) {
     _setupSprites();
   }
 
@@ -73,13 +74,13 @@ class GameScene extends Game {
       originPoint: () => _arrowStartPoint,
       arrowPoint: () => _currentArrowPoint,
       backButtonPoint: () => new Point(
-        x: _backButtonPoint.x + 200.0,
-        y: _backButtonPoint.y,
-      ),
+            x: _backButtonPoint.x + 200.0,
+            y: _backButtonPoint.y,
+          ),
       restartButtonPoint: () => new Point(
-        x: _restartButtonPoint.x + 250.0,
-        y: _restartButtonPoint.y,
-      ),
+            x: _restartButtonPoint.x + 250.0,
+            y: _restartButtonPoint.y,
+          ),
       gestureHandler: _handleGesture,
       goBackHandler: _handleGoBack,
       restartHandler: _handleRestart,
@@ -91,7 +92,8 @@ class GameScene extends Game {
     _crates = config.crates.map((config) => new Crate(config)).toList();
     _totalAmountOfCrates = _crates.length;
 
-    _platforms = config.platforms.map((config) => new Platform(config)).toList();
+    _platforms =
+        config.platforms.map((config) => new Platform(config)).toList();
   }
 
   @override
@@ -100,69 +102,42 @@ class GameScene extends Game {
     _internalRenderSprite(canvas, _landscape);
 
     // render the current level info
-    _internalRenderHudText(new HudInfo(
-      text: '${config.level}',
-      canvas: canvas,
-      x: dimensions.width - 200.0,
-      y: dimensions.height - 200.0,
-      width: 200.0,
-    ), Hud.drawText);
+    _internalRenderHudText(
+        new HudInfo(
+          text: '${config.level}',
+          canvas: canvas,
+          x: dimensions.width - 200.0,
+          y: dimensions.height - 200.0,
+          width: 200.0,
+        ),
+        Hud.drawText);
 
     // render the back button
-    _internalRenderHudText(new HudInfo(
-      text: 'Menu',
-      canvas: canvas,
-      x: _backButtonPoint.x,
-      y: _backButtonPoint.y,
-      width: 400.0,
-    ), Hud.drawText);
+    _internalRenderHudText(
+        new HudInfo(
+          text: 'Menu',
+          canvas: canvas,
+          x: _backButtonPoint.x,
+          y: _backButtonPoint.y,
+          width: 400.0,
+        ),
+        Hud.drawText);
 
     // render the restart button
-    _internalRenderHudText(new HudInfo(
-      text: 'Restart',
-      canvas: canvas,
-      x: _restartButtonPoint.x,
-      y: _restartButtonPoint.y,
-      width: 600.0,
-    ), Hud.drawText);
+    _internalRenderHudText(
+        new HudInfo(
+          text: 'Restart',
+          canvas: canvas,
+          x: _restartButtonPoint.x,
+          y: _restartButtonPoint.y,
+          width: 600.0,
+        ),
+        Hud.drawText);
 
     // render the arrow
     _internalRenderSprite(canvas, _arrow);
 
-    // render launch info todo move this to it's own function
-    if (_currentArrowPoint != _arrowStartPoint && !_physics.hasLaunched) {
-      var d = Formulas.distanceBetween(_currentArrowPoint, _arrowStartPoint);
-
-      var lineCreator = (Canvas c) {
-        var thickness = (math.max(1.0, d) / 64.0).clamp(1.0, 20.0);
-        c.drawLine(new Offset(_currentArrowPoint.x, _currentArrowPoint.y),
-            new Offset(_arrowStartPoint.x, _arrowStartPoint.y),
-            new Paint()
-              ..color = new Color.fromRGBO(255, 0, 0, 1.0)
-              ..strokeWidth = thickness
-        );
-      };
-
-      var arcCreator = (Canvas c) {
-        var points = _physics.simulateProjection(
-          distance: Formulas.distanceBetween(_arrowStartPoint, _currentArrowPoint),
-          radians: Formulas.angleBetween(_arrowStartPoint, _currentArrowPoint),
-          x0: _currentArrowPoint.x,
-          y0: _currentArrowPoint.y,
-        );
-
-        for (var point in points) {
-          canvas.drawCircle(new Offset(point.x, point.y), 3.0,
-              new Paint()
-                ..color = new Color.fromRGBO(255, 0, 0, 1.0)
-                ..strokeWidth = 2.0
-          );
-        }
-      };
-
-      _internalRenderStroke(canvas, lineCreator);
-      _internalRenderStroke(canvas, arcCreator);
-    }
+    _internalRenderGuides(canvas);
 
     // render the crates
     _crates.forEach((crate) => _internalRenderSprite(canvas, crate));
@@ -205,7 +180,8 @@ class GameScene extends Game {
         if (_crates.isEmpty) {
           unloadGameScene();
           if (onGameComplete != null) {
-            onGameComplete(config.level, 2 * _totalAmountOfCrates - _timesLaunched);
+            onGameComplete(
+                config.level, 2 * _totalAmountOfCrates - _timesLaunched);
           }
         }
         break;
@@ -232,7 +208,8 @@ class GameScene extends Game {
     _interpreter.interpret(data);
   }
 
-  void _handleGesture(Gesture gesture) => print('received generic gesture $gesture');
+  void _handleGesture(Gesture gesture) =>
+      print('received generic gesture $gesture');
 
   void _handleGoBack(_) => unloadGameScene();
 
@@ -243,8 +220,10 @@ class GameScene extends Game {
   }
 
   void _handleControlArrow(ControlArrow gesture) {
-    _arrow.x = _arrowStartPoint.x + gesture.distance * math.cos(gesture.radians);
-    _arrow.y = _arrowStartPoint.y + gesture.distance * math.sin(gesture.radians);
+    _arrow.x =
+        _arrowStartPoint.x + gesture.distance * math.cos(gesture.radians);
+    _arrow.y =
+        _arrowStartPoint.y + gesture.distance * math.sin(gesture.radians);
     _arrow.angle = Formulas.angleBetween(_arrowStartPoint, _currentArrowPoint);
   }
 
@@ -275,10 +254,12 @@ class GameScene extends Game {
   Point get _currentArrowPoint => new Point(x: _arrow.x, y: _arrow.y);
 
   // the back button's point (unchanging)
-  Point get _backButtonPoint => new Point(x: dimensions.width - 400.0, y: 100.0);
+  Point get _backButtonPoint =>
+      new Point(x: dimensions.width - 400.0, y: 100.0);
 
   // the restart button's point (unchanging)
-  Point get _restartButtonPoint => new Point(x: _backButtonPoint.x - 600.0, y: 100.0);
+  Point get _restartButtonPoint =>
+      new Point(x: _backButtonPoint.x - 600.0, y: 100.0);
 
   // Renders the [sprite] on the [canvas].
   void _internalRenderStroke(Canvas canvas, CanvasStroker updater) {
@@ -302,5 +283,46 @@ class GameScene extends Game {
     func(info);
     info.canvas.restore();
     info.canvas.save();
+  }
+
+  void _renderLaunchVector(Canvas c) {
+    var d = Formulas.distanceBetween(_currentArrowPoint, _arrowStartPoint);
+
+    var thickness = (math.max(1.0, d) / 64.0).clamp(1.0, 20.0);
+    c.drawLine(
+        new Offset(_currentArrowPoint.x, _currentArrowPoint.y),
+        new Offset(_arrowStartPoint.x, _arrowStartPoint.y),
+        new Paint()
+          ..color = new Color.fromRGBO(255, 0, 0, 1.0)
+          ..strokeWidth = thickness);
+  }
+
+  void _renderLaunchPreview(Canvas c) {
+    var points = _physics.simulateProjection(
+      distance: Formulas.distanceBetween(_arrowStartPoint, _currentArrowPoint),
+      radians: Formulas.angleBetween(_arrowStartPoint, _currentArrowPoint),
+      x0: _currentArrowPoint.x,
+      y0: _currentArrowPoint.y,
+    );
+
+    for (var point in points) {
+      c.drawCircle(
+          new Offset(point.x, point.y),
+          3.0,
+          new Paint()
+            ..color = new Color.fromRGBO(255, 0, 0, 1.0)
+            ..strokeWidth = 2.0);
+    }
+  }
+
+  // Renders launch info]
+  void _internalRenderGuides(Canvas canvas) {
+    var showGuides = prefs.getBool(AppSharedPrefs.showGuides) ?? true;
+    if (showGuides &&
+        _currentArrowPoint != _arrowStartPoint &&
+        !_physics.hasLaunched) {
+      _internalRenderStroke(canvas, _renderLaunchVector);
+      _internalRenderStroke(canvas, _renderLaunchPreview);
+    }
   }
 }

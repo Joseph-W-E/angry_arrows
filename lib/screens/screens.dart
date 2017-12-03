@@ -178,7 +178,7 @@ class _LevelsScreenState extends State<LevelsScreen> {
 
     for (var i = 1; i <= 30; i++) {
       var isValid = i - 1 < widget.levels.levels.length;
-      var isEnabled = i <= (prefs?.getInt("CURRENT_LEVEL_INT") ?? 2);
+      var isEnabled = i <= (prefs?.getInt(AppSharedPrefs.levelOverride) ?? 2);
 
       levelPreviews.add(
         new BoxItem(
