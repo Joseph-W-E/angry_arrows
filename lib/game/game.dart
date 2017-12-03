@@ -17,12 +17,6 @@ typedef void CanvasStroker(Canvas c);
 GameScene activeGameScene;
 
 Future<Null> loadGameScene(Levels levels, int levelToStart) async {
-  // todo this is causing a shit load of errors to print in the stack trace
-  // todo figure out how to stop these errors
-
-  // setup Flame
-  Flame.audio.disableLog();
-
   // setup the dimensions
   var dimensions = await Flame.util.initialDimensions();
 
@@ -30,18 +24,14 @@ Future<Null> loadGameScene(Levels levels, int levelToStart) async {
   activeGameScene = new GameScene(
     dimensions: dimensions,
     config: levels.getLevel(levelToStart),
-  )..start();
-
-  // start handling user input
-  window.onPointerDataPacket = (PointerDataPacket packet) {
-    var pointer = packet.data.first;
-    // todo investigate what [packet.data] looks like
-    // todo (and maybe see if we can improve touch inputs)
-    activeGameScene?.input(pointer.physicalX, pointer.physicalY);
-  };
+  )..start(onInput: _onInput);
 }
 
-// todo consume this (and make sure it works)
+void _onInput(PointerDataPacket packet) {
+  if (packet.data.isEmpty) return;
+  activeGameScene?.input(packet.data.first);
+}
+
 void unloadGameScene() {
   activeGameScene?.stop();
 }
@@ -55,10 +45,10 @@ class GameScene extends Game {
   List<Crate> _crates;
   List<Platform> _platforms;
 
-  List<Point> _points = [];
   GestureInterpreter _interpreter;
 
-  PhysicsHandler _physics = new PhysicsHandler();
+  Point _arrowStartPoint;
+  ArrowPhysics _physics = new ArrowPhysics();
 
   GameScene({this.dimensions, this.config}) : assert(dimensions != null), assert(config != null) {
     _setupSprites();
@@ -69,9 +59,25 @@ class GameScene extends Game {
 
     _arrow = new Arrow(config.arrow);
 
+    _arrowStartPoint = new Point(x: config.arrow.x, y: config.arrow.y);
+
     _interpreter = new GestureInterpreter(
-      arrowPoint: _arrowStartPoint,
-      backButtonPoint: _backButtonPoint,
+      originPoint: () => _arrowStartPoint,
+      arrowPoint: () => _currentArrowPoint,
+      backButtonPoint: () => new Point(
+        x: _backButtonPoint.x + 200.0,
+        y: _backButtonPoint.y,
+      ),
+      restartButtonPoint: () => new Point(
+        x: _restartButtonPoint.x + 250.0,
+        y: _restartButtonPoint.y,
+      ),
+      gestureHandler: _handleGesture,
+      goBackHandler: _handleGoBack,
+      restartHandler: _handleRestart,
+      controlArrowHandler: _handleControlArrow,
+      launchArrowHandler: _handleLaunchArrow,
+      scrollHandler: _handleScroll,
     );
 
     _crates = config.crates.map((config) => new Crate(config)).toList();
@@ -97,15 +103,24 @@ class GameScene extends Game {
     _internalRenderHudText(new HudInfo(
       text: 'Menu',
       canvas: canvas,
-      x: dimensions.width - 400.0,
-      y: 100.0,
+      x: _backButtonPoint.x,
+      y: _backButtonPoint.y,
       width: 400.0,
+    ), Hud.drawText);
+
+    // render the restart button
+    _internalRenderHudText(new HudInfo(
+      text: 'Restart',
+      canvas: canvas,
+      x: _restartButtonPoint.x,
+      y: _restartButtonPoint.y,
+      width: 600.0,
     ), Hud.drawText);
 
     // render the arrow
     _internalRenderSprite(canvas, _arrow);
 
-    // render launch info todo move this to it's own function, maybe in physics.dart?
+    // render launch info todo move this to it's own function
     if (_currentArrowPoint != _arrowStartPoint && !_physics.hasLaunched) {
       var d = Formulas.distanceBetween(_currentArrowPoint, _arrowStartPoint);
 
@@ -120,11 +135,11 @@ class GameScene extends Game {
       };
 
       var arcCreator = (Canvas c) {
-        var points = _physics.getArchProjection(
+        var points = _physics.simulateProjection(
           distance: Formulas.distanceBetween(_arrowStartPoint, _currentArrowPoint),
           radians: Formulas.angleBetween(_arrowStartPoint, _currentArrowPoint),
-          x0: _arrowStartPoint.x,
-          y0: _arrowStartPoint.y,
+          x0: _currentArrowPoint.x,
+          y0: _currentArrowPoint.y,
         );
 
         for (var point in points) {
@@ -149,76 +164,100 @@ class GameScene extends Game {
 
   @override
   void update(double t) {
-    _handleGesture(t, _interpreter.interpret(_points));
-    _interpreter.updateArrowLocation(point: _currentArrowPoint);
-
     if (_physics.hasLaunched) {
-      _physics.update(t, (PhysicsUpdatePayload payload) {
-        _arrow.x = payload.x;
-        _arrow.y = payload.y;
-        _arrow.angle = payload.radians;
-      });
+      _handlePhysicsUpdate(_physics.update(t));
+      _checkCollisions();
+    }
+  }
 
-      // check for collision with crates or platforms
-      for (Crate crate in _crates) {
-        Point arrowPoint = new Point(x: _arrow.x, y: _arrow.y);
-        Point cratePoint = new Point(x: crate.x, y: crate.y);
-        if (Formulas.distanceBetween(arrowPoint, cratePoint) < 100) {
-          // todo correctly update the ui
-          _crates.remove(_crates);
-          _physics.reset();
+  void _handlePhysicsUpdate(PhysicsUpdatePayload payload) {
+    if (payload == null) return;
 
-          // todo if there are no more crates, move to the next level
-          break;
+    _arrow.x = payload.point.x;
+    _arrow.y = payload.point.y;
+    _arrow.angle = payload.radians;
+  }
+
+  void _checkCollisions() {
+    for (Crate crate in _crates) {
+      Point cratePoint = new Point(x: crate.x, y: crate.y);
+      if (Formulas.distanceBetween(_currentArrowPoint, cratePoint) < 100) {
+        _resetArrow();
+        _crates.remove(crate);
+
+        if (_crates.isEmpty) {
+          unloadGameScene();
         }
+        break;
       }
     }
 
-    _points.clear();
-  }
-
-  /// Accepts user input (typically a touch).
-  /// [x] and [y] are the coordinates of the input.
-  void input(double x, double y) {
-    _points.add(new Point(x: x, y: y));
-  }
-
-  // Determines how to manipulate the objects based off the received [gesture]
-  void _handleGesture(double t, Gesture gesture) {
-    // we should ignore potentially bad gestures
-    // unless they're trying to grab the arrow
-    if (gesture == null || (gesture.isNaive && gesture is! ControlArrow)) return;
-
-    if (gesture is GoBack) {
-      unloadGameScene();
-
-    } else if (gesture is Scroll) {
-      if (_physics.hasLaunched) return;
-      _arrow.x += gesture.distance;
-      _crates.forEach((crate) => crate.x += gesture.distance);
-      _platforms.forEach((platform) => platform.x += gesture.distance);
-
-    } else if (gesture is ControlArrow) {
-      _arrow.x += gesture.distance * math.cos(gesture.radians);
-      _arrow.y += gesture.distance * math.sin(gesture.radians);
-      _arrow.angle = Formulas.angleBetween(_arrowStartPoint, _currentArrowPoint);
-
-    } else if (gesture is LaunchArrow) {
-      _physics.launch(
-        distance: Formulas.distanceBetween(_arrowStartPoint, _currentArrowPoint),
-        radians: Formulas.angleBetween(_arrowStartPoint, _currentArrowPoint),
-        x0: config.arrow.x,
-        y0: config.arrow.y,
-      );
-
-    } else {
-      print("Error: Unknown gesture $gesture");
+    for (Platform platform in _platforms) {
+      Point platformPoint = new Point(x: platform.x, y: platform.y);
+      if (Formulas.distanceBetween(_currentArrowPoint, platformPoint) < 100) {
+        _resetArrow();
+        break;
+      }
     }
   }
 
-  Point get _arrowStartPoint => new Point(x: config.arrow.x, y: config.arrow.y);
+  void _resetArrow() {
+    _arrow.x = _arrowStartPoint.x;
+    _arrow.y = _arrowStartPoint.y;
+    _physics.reset();
+  }
+
+  /// Handles user input.
+  void input(PointerData data) {
+    _interpreter.interpret(data);
+  }
+
+  void _handleGesture(Gesture gesture) => print('received generic gesture $gesture');
+
+  void _handleGoBack(_) => unloadGameScene();
+
+  // todo fix this
+  void _handleRestart(_) {
+    _physics.reset();
+    _setupSprites();
+  }
+
+  void _handleControlArrow(ControlArrow gesture) {
+    _arrow.x = _arrowStartPoint.x + gesture.distance * math.cos(gesture.radians);
+    _arrow.y = _arrowStartPoint.y + gesture.distance * math.sin(gesture.radians);
+    _arrow.angle = Formulas.angleBetween(_arrowStartPoint, _currentArrowPoint);
+  }
+
+  // requests the physics handler to launch
+  void _handleLaunchArrow(LaunchArrow gesture) {
+    _physics.launch(
+      distance: Formulas.distanceBetween(_arrowStartPoint, _currentArrowPoint),
+      radians: Formulas.angleBetween(_arrowStartPoint, _currentArrowPoint),
+      x0: _currentArrowPoint.x,
+      y0: _currentArrowPoint.y,
+    );
+  }
+
+  // when scrolling, move all visible items (and arrow launch point)
+  void _handleScroll(Scroll gesture) {
+    if (_physics.hasLaunched) return;
+    _arrow.x += gesture.distance;
+    _arrowStartPoint = new Point(
+      x: _arrowStartPoint.x + gesture.distance,
+      y: _arrowStartPoint.y,
+    );
+    _crates.forEach((crate) => crate.x += gesture.distance);
+    _platforms.forEach((platform) => platform.x += gesture.distance);
+  }
+
+  // the arrow's current point
   Point get _currentArrowPoint => new Point(x: _arrow.x, y: _arrow.y);
+
+  // the back button's point (unchanging)
   Point get _backButtonPoint => new Point(x: dimensions.width - 400.0, y: 100.0);
+
+  // the restart button's point (unchanging)
+  Point get _restartButtonPoint => new Point(x: _backButtonPoint.x - 600.0, y: 100.0);
 
   // Renders the [sprite] on the [canvas].
   void _internalRenderStroke(Canvas canvas, CanvasStroker updater) {
@@ -236,6 +275,7 @@ class GameScene extends Game {
     canvas.save();
   }
 
+  // Renders [info.text] on the [info.canvas].
   void _internalRenderHudText(HudInfo info, DrawText func) {
     info.canvas.save();
     func(info);

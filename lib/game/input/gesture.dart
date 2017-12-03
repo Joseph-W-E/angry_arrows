@@ -1,102 +1,155 @@
+import 'dart:ui';
+
 import 'package:angry_arrows/game/physics/formulas.dart';
+import 'package:meta/meta.dart';
+
+typedef Point OnRequestPoint();
 
 /// Interprets arrays of [Points] to determine what the user was trying to do.
 /// Keeps a local history of the gestures, allowing smart gesture detection.
 class GestureInterpreter {
-  List<Gesture> _history = [];
+  // logical location of the point the arrow is centered around
+  final OnRequestPoint originPoint;
+  Point get _originPoint => originPoint();
 
-  // location of the point the arrow is centered around
-  Point originPoint;
+  // logical location of the point the arrow is currently at
+  final OnRequestPoint arrowPoint;
+  Point get _arrowPoint => arrowPoint();
 
-  // location of the point the arrow is currently at
-  Point arrowPoint;
+  // logical location of the point the back button is located
+  // this point's position should not change
+  final OnRequestPoint backButtonPoint;
+  Point get _backButtonPoint => backButtonPoint();
 
-  // location of the point the back button is located
-  // note that this point is not affected by scrolling
-  Point backButtonPoint;
+  final OnRequestPoint restartButtonPoint;
+  Point get _restartButtonPoint => restartButtonPoint();
 
-  // the current state of the arrow
+  // callbacks that [GestureInterpreter] invokes when the events happen
+  final GestureHandler gestureHandler;
+  final GoBackHandler goBackHandler;
+  final RestartHandler restartHandler;
+  final ControlArrowHandler controlArrowHandler;
+  final LaunchArrowHandler launchArrowHandler;
+  final ScrollHandler scrollHandler;
+
+  // the latest pointer data
+  PointerData _data;
+  // the previously known data (used for scrolling)
+  PointerData _previousData;
+
+  // the pointer state
   State _state = State.none;
 
-  GestureInterpreter({this.arrowPoint, this.backButtonPoint});
+  GestureInterpreter({
+    @required this.originPoint,
+    @required this.arrowPoint,
+    @required this.backButtonPoint,
+    @required this.restartButtonPoint,
+    this.gestureHandler,
+    this.goBackHandler,
+    this.restartHandler,
+    this.controlArrowHandler,
+    this.launchArrowHandler,
+    this.scrollHandler
+  });
 
   /// Generates a [Gesture] from the given [points].
-  Gesture interpret(List<Point> points) {
-    if (points == null || points.isEmpty) {
-      if (_state == State.holdingArrow) {
-        // they let go of the arrow
-        // below doesn't work
-        //return new LaunchArrow(false);
-      }
-      _history.clear();
-      return null;
+  void interpret(PointerData data) {
+    _previousData = data.change == PointerChange.move ? _data : null;
+    _data = data;
+    var gesture = _analyzePointerData();
+    if (gesture is GoBack && goBackHandler != null) {
+      goBackHandler(gesture);
+    } else if (gesture is Restart && restartHandler != null) {
+      restartHandler(gesture);
+    } else if (gesture is ControlArrow && controlArrowHandler != null) {
+      controlArrowHandler(gesture);
+    } else if (gesture is LaunchArrow && launchArrowHandler != null) {
+      launchArrowHandler(gesture);
+    } else if (gesture is Scroll && scrollHandler != null) {
+      scrollHandler(gesture);
+    } else if (gesture != null && gestureHandler != null) {
+      gestureHandler(gesture);
     }
-
-    points.forEach((point) => _history.add(new Gesture(true, point: point)));
-
-    return _analyzeHistory();
-  }
-
-  /// Should be called if the arrow changes location or size.
-  void updateArrowLocation({Point point}) {
-    arrowPoint = point ?? arrowPoint;
   }
 
   /// Determines what gesture to send back.
-  Gesture _analyzeHistory() {
-    // Having more than 2 elements acts as a threshold (ignores very subtle inputs)
-    if (_history.length <= 2) return null;
-
-    Gesture gesture = _isGoBackGesture() ?? _isControlArrowGesture() ?? _isLaunchArrowGesture() ?? _isScrollGesture();
-    _history.clear();
-    return gesture;
+  Gesture _analyzePointerData() {
+    return _isGoBackGesture()
+        ?? _isRestartGesture()
+        ?? _isControlArrowGesture()
+        ?? _isLaunchArrowGesture()
+        ?? _isScrollGesture();
   }
 
   /// Determines if [_history] can be converted to a [GoBack] gesture.
   GoBack _isGoBackGesture() {
-    var start = _history.first.point;
-    return Formulas.distanceBetween(start, backButtonPoint) < 400.0 ? new GoBack(false) : null;
+    // only let the user go back if they weren't doing anything
+    if (_state != State.none) return null;
+    if (_data.change != PointerChange.up) return null;
+
+    var distance = Formulas.distanceBetween(new Point.fromPointerData(_data), _backButtonPoint);
+    return distance < 200.0 ? new GoBack(data: _data) : null;
+  }
+
+  Restart _isRestartGesture() {
+    // only let the user restart if they weren't holding the arrow or scrolling
+    if (_state == State.holdingArrow || _state == State.scrolling) return null;
+    if (_data.change != PointerChange.up) return null;
+
+    var distance = Formulas.distanceBetween(new Point.fromPointerData(_data), _restartButtonPoint);
+    return distance < 300.0 ? new Restart(data: _data) : null;
   }
 
   /// Determines if [_history] can be converted to a [ControlArrow] gesture.
   ControlArrow _isControlArrowGesture() {
-    if (_state == State.launchingArrow) return null;
+    // we are scrolling or launching the arrow, so don't grab the arrow
+    if (_state == State.scrolling || _state == State.launchingArrow) return null;
+    // down change is to pick up the arrow, move is to move arrow
+    if (_data.change != PointerChange.down && _data.change != PointerChange.move) return null;
 
-    var start = _history.first.point;
-    var distanceToArrow = _distanceToArrow(start);
-
-    if (distanceToArrow > 128.0) return null; // [start] is too far away
-
-    var radians = _angleToArrow(start);
+    var dataPoint = new Point.fromPointerData(_data);
+    if (Formulas.distanceBetween(dataPoint, _arrowPoint) > 128.0) {
+      // we are no longer near the arrow, so we should return null
+      return null;
+    }
 
     _state = State.holdingArrow;
 
     return new ControlArrow(
-      false,
-      distance: distanceToArrow,
-      radians: radians,
+      data: _data,
+      distance: Formulas.distanceBetween(dataPoint, _originPoint),
+      radians: Formulas.angleBetween(dataPoint, _originPoint),
     );
   }
 
-  double _distanceToArrow(Point p) => Formulas.distanceBetween(p, arrowPoint);
-
-  double _angleToArrow(Point p) => Formulas.angleBetween(p, arrowPoint);
-
   /// Determines if [_history] can be converted to a [LaunchArrow] gesture.
   LaunchArrow _isLaunchArrowGesture() {
+    // they aren't holding the arrow, so this gesture cannot happen
     if (_state != State.holdingArrow) return null;
-    _state = State.launchingArrow;
+    // they didn't let go, so we can't launch yet
+    if (_data.change != PointerChange.up) return null;
 
-    return new LaunchArrow(false);
+    return new LaunchArrow(data: _data);
   }
 
   /// Determines if [_history] can be converted to a [Scroll] gesture.
   /// This should never return null. It's the last resort in the chain of commands.
   Scroll _isScrollGesture() {
-    var start = _history.first.point.x;
-    var end = _history.last.point.x;
+    if (_data.change == PointerChange.up) {
+      _state = State.none;
+      return null;
+    }
+
+    // if there is no previous data, then we just started scrolling
+    if (_previousData == null) return null;
+
+    _state = State.scrolling;
+
+    var start = _previousData.physicalX;
+    var end = _data.physicalX;
     var distance = end - start;
-    return new Scroll(false, distance: distance);
+    return new Scroll(data: _data, distance: distance);
   }
 }
 
@@ -104,29 +157,53 @@ class GestureInterpreter {
 // Types of gestures
 // //////////////////////////////
 
+typedef void GestureHandler(Gesture gesture);
+
 class Gesture {
-  final bool isNaive;
-  final Point point;
-  Gesture(this.isNaive, {this.point});
+  final PointerData data;
+  Gesture({this.data});
+
+  @override
+  String toString() => '$data';
 }
 
+typedef void GoBackHandler(GoBack gesture);
+
 class GoBack extends Gesture {
-  GoBack(bool isNaive) : super(isNaive);
+  GoBack({PointerData data}) : super(data: data);
 }
+
+typedef void RestartHandler(Restart gesture);
+
+class Restart extends Gesture {
+  Restart({PointerData data}) : super(data: data);
+}
+
+typedef void ControlArrowHandler(ControlArrow gesture);
 
 class ControlArrow extends Gesture {
   final double distance;
   final double radians;
-  ControlArrow(bool naive, {this.distance, this.radians}) : super(naive);
+  ControlArrow({PointerData data, this.distance, this.radians}) : super(data: data);
+
+  @override
+  String toString() => '${super.toString()}, ${distance.toStringAsFixed(2)}, ${radians.toStringAsPrecision(2)}';
 }
 
+typedef void LaunchArrowHandler(LaunchArrow gesture);
+
 class LaunchArrow extends Gesture {
-  LaunchArrow(bool naive) : super(naive);
+  LaunchArrow({PointerData data}) : super(data: data);
 }
+
+typedef void ScrollHandler(Scroll gesture);
 
 class Scroll extends Gesture {
   final double distance;
-  Scroll(bool naive, {this.distance}) : super(naive);
+  Scroll({PointerData data, this.distance}) : super(data: data);
+
+  @override
+  String toString() => '${super.toString()}, ${distance.toStringAsFixed(2)}';
 }
 
 // //////////////////////////////
@@ -134,5 +211,5 @@ class Scroll extends Gesture {
 // //////////////////////////////
 
 enum State {
-  none, holdingArrow, launchingArrow
+  none, holdingArrow, launchingArrow, scrolling
 }
