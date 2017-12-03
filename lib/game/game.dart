@@ -11,12 +11,15 @@ import 'package:angry_arrows/game/physics/physics.dart';
 import 'package:flame/component.dart';
 import 'package:flame/flame.dart';
 import 'package:flame/game.dart';
+import 'package:meta/meta.dart';
 
 typedef void CanvasStroker(Canvas c);
 
+typedef void OnGameComplete(int level, int score);
+
 GameScene activeGameScene;
 
-Future<Null> loadGameScene(Levels levels, int levelToStart) async {
+Future<Null> loadGameScene(Levels levels, int levelToStart, OnGameComplete onGameComplete) async {
   // setup the dimensions
   var dimensions = await Flame.util.initialDimensions();
 
@@ -24,6 +27,7 @@ Future<Null> loadGameScene(Levels levels, int levelToStart) async {
   activeGameScene = new GameScene(
     dimensions: dimensions,
     config: levels.getLevel(levelToStart),
+    onGameComplete: onGameComplete,
   )..start(onInput: _onInput);
 }
 
@@ -39,6 +43,7 @@ void unloadGameScene() {
 class GameScene extends Game {
   final Size dimensions;
   final LevelConfiguration config;
+  final OnGameComplete onGameComplete;
 
   Landscape _landscape;
   Arrow _arrow;
@@ -50,7 +55,10 @@ class GameScene extends Game {
   Point _arrowStartPoint;
   ArrowPhysics _physics = new ArrowPhysics();
 
-  GameScene({this.dimensions, this.config}) : assert(dimensions != null), assert(config != null) {
+  int _totalAmountOfCrates = 0;
+  int _timesLaunched = 0;
+
+  GameScene({@required this.dimensions, @required this.config, this.onGameComplete}) {
     _setupSprites();
   }
 
@@ -81,6 +89,7 @@ class GameScene extends Game {
     );
 
     _crates = config.crates.map((config) => new Crate(config)).toList();
+    _totalAmountOfCrates = _crates.length;
 
     _platforms = config.platforms.map((config) => new Platform(config)).toList();
   }
@@ -176,6 +185,14 @@ class GameScene extends Game {
     _arrow.x = payload.point.x;
     _arrow.y = payload.point.y;
     _arrow.angle = payload.radians;
+
+    // todo improve this
+    if (_arrow.x < 0.0 - 3000.0 || _arrow.x > dimensions.width + 3000.0) {
+      _resetArrow();
+    }
+    if (_arrow.y < 0.0 - 1000.0 || _arrow.y > dimensions.height + 1000.0) {
+      _resetArrow();
+    }
   }
 
   void _checkCollisions() {
@@ -187,6 +204,9 @@ class GameScene extends Game {
 
         if (_crates.isEmpty) {
           unloadGameScene();
+          if (onGameComplete != null) {
+            onGameComplete(config.level, 2 * _totalAmountOfCrates - _timesLaunched);
+          }
         }
         break;
       }
@@ -236,6 +256,7 @@ class GameScene extends Game {
       x0: _currentArrowPoint.x,
       y0: _currentArrowPoint.y,
     );
+    _timesLaunched++;
   }
 
   // when scrolling, move all visible items (and arrow launch point)
