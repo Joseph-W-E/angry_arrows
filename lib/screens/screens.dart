@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:angry_arrows/constants.dart';
 import 'package:angry_arrows/data/firebase_adapter.dart';
 import 'package:angry_arrows/game/game.dart';
 import 'package:angry_arrows/game/objects/level.dart';
@@ -265,9 +266,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
               children: <Widget>[
                 new Text("Show launch guides"),
                 new Checkbox(
-                  value: prefs.getBool("SHOW_GUIDES") ?? false,
-                  onChanged: (nextValue) =>
-                      setState(() => prefs.setBool("SHOW_GUIDES", nextValue)),
+                  value: prefs.getBool(AppSharedPrefs.showGuides) ?? true,
+                  onChanged: (nextValue) => setState(
+                        () =>
+                            prefs.setBool(AppSharedPrefs.showGuides, nextValue),
+                      ),
                 ),
               ],
             ),
@@ -277,14 +280,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
               children: <Widget>[
                 new Text("Override current level"),
                 new Slider(
-                  value: prefs.getInt("CURRENT_LEVEL_INT")?.toDouble() ?? 2.0,
+                  // casting int to double because of SharedPrefs flutter implementation issue
+                  value: prefs.getInt(AppSharedPrefs.levelOverride)?.toDouble() ?? 2.0,
                   min: 1.0,
                   max: 30.0,
                   divisions: 30,
-                  label: prefs.getInt("CURRENT_LEVEL_INT").toString(),
+                  label: prefs.getInt(AppSharedPrefs.levelOverride).toString(),
                   thumbOpenAtMin: true,
                   onChanged: (nextValue) => setState(() =>
-                      prefs.setInt("CURRENT_LEVEL_INT", nextValue.toInt())),
+                      prefs.setInt(AppSharedPrefs.levelOverride, nextValue.toInt())),
                 ),
               ],
             ),

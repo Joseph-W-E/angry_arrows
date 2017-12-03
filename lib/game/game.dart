@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'dart:ui';
 
+import 'package:angry_arrows/constants.dart';
 import 'package:angry_arrows/game/input/gesture.dart';
 import 'package:angry_arrows/game/objects/hud.dart';
 import 'package:angry_arrows/game/objects/level.dart';
@@ -11,16 +12,19 @@ import 'package:angry_arrows/game/physics/physics.dart';
 import 'package:flame/component.dart';
 import 'package:flame/flame.dart';
 import 'package:flame/game.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 typedef void CanvasStroker(Canvas c);
 
 GameScene activeGameScene;
+SharedPreferences prefs;
 
 Future<Null> loadGameScene(Levels levels, int levelToStart) async {
   // setup the dimensions
   var dimensions = await Flame.util.initialDimensions();
-
   // start the game
+  prefs = await SharedPreferences.getInstance();
+
   activeGameScene = new GameScene(
     dimensions: dimensions,
     config: levels.getLevel(levelToStart),
@@ -120,8 +124,9 @@ class GameScene extends Game {
     // render the arrow
     _internalRenderSprite(canvas, _arrow);
 
+    var showGuides = prefs.getBool(AppSharedPrefs.showGuides) ?? true;
     // render launch info todo move this to it's own function
-    if (_currentArrowPoint != _arrowStartPoint && !_physics.hasLaunched) {
+    if (showGuides && _currentArrowPoint != _arrowStartPoint && !_physics.hasLaunched) {
       var d = Formulas.distanceBetween(_currentArrowPoint, _arrowStartPoint);
 
       var lineCreator = (Canvas c) {
@@ -150,7 +155,6 @@ class GameScene extends Game {
           );
         }
       };
-
       _internalRenderStroke(canvas, lineCreator);
       _internalRenderStroke(canvas, arcCreator);
     }
