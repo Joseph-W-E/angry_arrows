@@ -48,7 +48,7 @@ class GameScene extends Game {
   GestureInterpreter _interpreter;
 
   Point _arrowStartPoint;
-  PhysicsHandler _physics = new PhysicsHandler();
+  ArrowPhysics _physics = new ArrowPhysics();
 
   GameScene({this.dimensions, this.config}) : assert(dimensions != null), assert(config != null) {
     _setupSprites();
@@ -120,7 +120,7 @@ class GameScene extends Game {
     // render the arrow
     _internalRenderSprite(canvas, _arrow);
 
-    // render launch info todo move this to it's own function, maybe in physics.dart?
+    // render launch info todo move this to it's own function
     if (_currentArrowPoint != _arrowStartPoint && !_physics.hasLaunched) {
       var d = Formulas.distanceBetween(_currentArrowPoint, _arrowStartPoint);
 
@@ -135,11 +135,11 @@ class GameScene extends Game {
       };
 
       var arcCreator = (Canvas c) {
-        var points = _physics.getArchProjection(
+        var points = _physics.simulateProjection(
           distance: Formulas.distanceBetween(_arrowStartPoint, _currentArrowPoint),
           radians: Formulas.angleBetween(_arrowStartPoint, _currentArrowPoint),
-          x0: _arrowStartPoint.x,
-          y0: _arrowStartPoint.y,
+          x0: _currentArrowPoint.x,
+          y0: _currentArrowPoint.y,
         );
 
         for (var point in points) {
@@ -165,26 +165,46 @@ class GameScene extends Game {
   @override
   void update(double t) {
     if (_physics.hasLaunched) {
-      _physics.update(t, (PhysicsUpdatePayload payload) {
-        _arrow.x = payload.x;
-        _arrow.y = payload.y;
-        _arrow.angle = payload.radians;
-      });
+      _handlePhysicsUpdate(_physics.update(t));
+      _checkCollisions();
+    }
+  }
 
-      // check for collision with crates or platforms
-      for (Crate crate in _crates) {
-        Point arrowPoint = new Point(x: _arrow.x, y: _arrow.y);
-        Point cratePoint = new Point(x: crate.x, y: crate.y);
-        if (Formulas.distanceBetween(arrowPoint, cratePoint) < 100) {
-          // todo correctly update the ui
-          _crates.remove(_crates);
-          _physics.reset();
+  void _handlePhysicsUpdate(PhysicsUpdatePayload payload) {
+    if (payload == null) return;
 
-          // todo if there are no more crates, move to the next level
-          break;
+    _arrow.x = payload.point.x;
+    _arrow.y = payload.point.y;
+    _arrow.angle = payload.radians;
+  }
+
+  void _checkCollisions() {
+    for (Crate crate in _crates) {
+      Point cratePoint = new Point(x: crate.x, y: crate.y);
+      if (Formulas.distanceBetween(_currentArrowPoint, cratePoint) < 100) {
+        _resetArrow();
+        _crates.remove(crate);
+
+        if (_crates.isEmpty) {
+          unloadGameScene();
         }
+        break;
       }
     }
+
+    for (Platform platform in _platforms) {
+      Point platformPoint = new Point(x: platform.x, y: platform.y);
+      if (Formulas.distanceBetween(_currentArrowPoint, platformPoint) < 100) {
+        _resetArrow();
+        break;
+      }
+    }
+  }
+
+  void _resetArrow() {
+    _arrow.x = _arrowStartPoint.x;
+    _arrow.y = _arrowStartPoint.y;
+    _physics.reset();
   }
 
   /// Handles user input.
@@ -196,24 +216,29 @@ class GameScene extends Game {
 
   void _handleGoBack(_) => unloadGameScene();
 
-  void _handleRestart(_) => print('todo restart');
+  // todo fix this
+  void _handleRestart(_) {
+    _physics.reset();
+    _setupSprites();
+  }
 
   void _handleControlArrow(ControlArrow gesture) {
-    print('gesture: $gesture');
     _arrow.x = _arrowStartPoint.x + gesture.distance * math.cos(gesture.radians);
     _arrow.y = _arrowStartPoint.y + gesture.distance * math.sin(gesture.radians);
     _arrow.angle = Formulas.angleBetween(_arrowStartPoint, _currentArrowPoint);
   }
 
+  // requests the physics handler to launch
   void _handleLaunchArrow(LaunchArrow gesture) {
     _physics.launch(
       distance: Formulas.distanceBetween(_arrowStartPoint, _currentArrowPoint),
       radians: Formulas.angleBetween(_arrowStartPoint, _currentArrowPoint),
-      x0: config.arrow.x,
-      y0: config.arrow.y,
+      x0: _currentArrowPoint.x,
+      y0: _currentArrowPoint.y,
     );
   }
 
+  // when scrolling, move all visible items (and arrow launch point)
   void _handleScroll(Scroll gesture) {
     if (_physics.hasLaunched) return;
     _arrow.x += gesture.distance;

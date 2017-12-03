@@ -28,6 +28,24 @@ class Formulas {
   static double distanceBetween(Point a, Point b) {
     return math.sqrt(math.pow(b.y - a.y, 2) + math.pow(b.x - a.x, 2));
   }
+
+  /// calculates the initial horizontal velocity
+  static double initialHorizontalVelocity(double distance, double radians, {num scale: 2}) {
+    return scale * distance * math.cos(radians);
+  }
+
+  /// calculates the initial vertical velocity
+  static double initialVerticalVelocity(double distance, double radians, {num scale: -2}) {
+    return scale * distance * math.sin(radians);
+  }
+
+  /// calculates the radians of a projectile
+  ///   [x] is the horizontal displacement thus far
+  ///   [y] is the vertical displacement thus far
+  ///   [t] is the time since launch
+  static double radians(double x, double y, double t) {
+    return math.atan2(y, x);
+  }
 }
 
 class Point {
