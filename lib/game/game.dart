@@ -2,11 +2,12 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'dart:ui';
 
-import 'package:angry_arrows/common/common.dart';
-import 'package:angry_arrows/game/gesture.dart';
-import 'package:angry_arrows/game/level.dart';
-import 'package:angry_arrows/game/objects.dart';
-import 'package:angry_arrows/game/physics.dart';
+import 'package:angry_arrows/game/input/gesture.dart';
+import 'package:angry_arrows/game/objects/hud.dart';
+import 'package:angry_arrows/game/objects/level.dart';
+import 'package:angry_arrows/game/objects/objects.dart';
+import 'package:angry_arrows/game/physics/formulas.dart';
+import 'package:angry_arrows/game/physics/physics.dart';
 import 'package:flame/component.dart';
 import 'package:flame/flame.dart';
 import 'package:flame/game.dart';
@@ -69,10 +70,8 @@ class GameScene extends Game {
     _arrow = new Arrow(config.arrow);
 
     _interpreter = new GestureInterpreter(
-      arrowPoint: new Point(x: config.arrow.x, y: config.arrow.y),
-      arrowWidth: config.arrow.width,
-      arrowHeight: config.arrow.height,
-      arrowRadians: config.arrow.angle,
+      arrowPoint: _arrowStartPoint,
+      backButtonPoint: _backButtonPoint,
     );
 
     _crates = config.crates.map((config) => new Crate(config)).toList();
@@ -85,29 +84,30 @@ class GameScene extends Game {
     // render the landscape
     _internalRenderSprite(canvas, _landscape);
 
-    // todo get rid of this, move to hud.dart, add hud information
-    canvas.save();
-    var builder = new ParagraphBuilder(new ParagraphStyle(
-      textAlign: TextAlign.center,
-      fontWeight: FontWeight.w900,
-      fontStyle: FontStyle.normal,
-      fontSize: 128.0,
-    ))..addText("Start");
+    // render the current level info
+    _internalRenderHudText(new HudInfo(
+      text: '${config.level}',
+      canvas: canvas,
+      x: dimensions.width - 200.0,
+      y: dimensions.height - 200.0,
+      width: 200.0,
+    ), Hud.drawText);
 
-    var text = builder.build();
-    text.layout(new ParagraphConstraints(width: 300.0));
-
-    canvas.drawParagraph(text, new Offset(500.0, 500.0));
-    canvas.restore();
-    canvas.save();
-    // todo ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    // render the back button
+    _internalRenderHudText(new HudInfo(
+      text: 'Menu',
+      canvas: canvas,
+      x: dimensions.width - 400.0,
+      y: 100.0,
+      width: 400.0,
+    ), Hud.drawText);
 
     // render the arrow
     _internalRenderSprite(canvas, _arrow);
 
     // render launch info todo move this to it's own function, maybe in physics.dart?
     if (_currentArrowPoint != _arrowStartPoint && !_physics.hasLaunched) {
-      var d = distanceBetween(_currentArrowPoint, _arrowStartPoint);
+      var d = Formulas.distanceBetween(_currentArrowPoint, _arrowStartPoint);
 
       var lineCreator = (Canvas c) {
         var thickness = (math.max(1.0, d) / 64.0).clamp(1.0, 20.0);
@@ -121,8 +121,8 @@ class GameScene extends Game {
 
       var arcCreator = (Canvas c) {
         var points = _physics.getArchProjection(
-          distance: distanceBetween(_arrowStartPoint, _currentArrowPoint),
-          radians: angleBetween(_arrowStartPoint, _currentArrowPoint),
+          distance: Formulas.distanceBetween(_arrowStartPoint, _currentArrowPoint),
+          radians: Formulas.angleBetween(_arrowStartPoint, _currentArrowPoint),
           x0: _arrowStartPoint.x,
           y0: _arrowStartPoint.y,
         );
@@ -150,7 +150,7 @@ class GameScene extends Game {
   @override
   void update(double t) {
     _handleGesture(t, _interpreter.interpret(_points));
-    _interpreter.updateArrowInformation(point: new Point(x: _arrow.x, y: _arrow.y));
+    _interpreter.updateArrowLocation(point: _currentArrowPoint);
 
     if (_physics.hasLaunched) {
       _physics.update(t, (PhysicsUpdatePayload payload) {
@@ -163,7 +163,7 @@ class GameScene extends Game {
       for (Crate crate in _crates) {
         Point arrowPoint = new Point(x: _arrow.x, y: _arrow.y);
         Point cratePoint = new Point(x: crate.x, y: crate.y);
-        if (distanceBetween(arrowPoint, cratePoint) < 100) {
+        if (Formulas.distanceBetween(arrowPoint, cratePoint) < 100) {
           // todo correctly update the ui
           _crates.remove(_crates);
           _physics.reset();
@@ -201,12 +201,12 @@ class GameScene extends Game {
     } else if (gesture is ControlArrow) {
       _arrow.x += gesture.distance * math.cos(gesture.radians);
       _arrow.y += gesture.distance * math.sin(gesture.radians);
-      _arrow.angle = angleBetween(_arrowStartPoint, _currentArrowPoint);
+      _arrow.angle = Formulas.angleBetween(_arrowStartPoint, _currentArrowPoint);
 
     } else if (gesture is LaunchArrow) {
       _physics.launch(
-        distance: distanceBetween(_arrowStartPoint, _currentArrowPoint),
-        radians: angleBetween(_arrowStartPoint, _currentArrowPoint),
+        distance: Formulas.distanceBetween(_arrowStartPoint, _currentArrowPoint),
+        radians: Formulas.angleBetween(_arrowStartPoint, _currentArrowPoint),
         x0: config.arrow.x,
         y0: config.arrow.y,
       );
@@ -218,6 +218,7 @@ class GameScene extends Game {
 
   Point get _arrowStartPoint => new Point(x: config.arrow.x, y: config.arrow.y);
   Point get _currentArrowPoint => new Point(x: _arrow.x, y: _arrow.y);
+  Point get _backButtonPoint => new Point(x: dimensions.width - 400.0, y: 100.0);
 
   // Renders the [sprite] on the [canvas].
   void _internalRenderStroke(Canvas canvas, CanvasStroker updater) {
@@ -233,5 +234,12 @@ class GameScene extends Game {
     sprite.render(canvas);
     canvas.restore();
     canvas.save();
+  }
+
+  void _internalRenderHudText(HudInfo info, DrawText func) {
+    info.canvas.save();
+    func(info);
+    info.canvas.restore();
+    info.canvas.save();
   }
 }

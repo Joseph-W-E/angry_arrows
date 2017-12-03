@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:angry_arrows/game/level.dart';
+import 'package:angry_arrows/game/objects/level.dart';
 import 'package:angry_arrows/screens/screens.dart';
 import 'package:flame/flame.dart';
 
