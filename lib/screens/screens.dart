@@ -21,7 +21,6 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-
   @override
   void initState() {
     super.initState();
@@ -71,7 +70,8 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _handleStartOnPress() => loadGameScene(widget.levels, 1, firebase.writeScore);
+  void _handleStartOnPress() =>
+      loadGameScene(widget.levels, 1, firebase.writeScore);
 
   void _handleLevelsOnPress() {
     Navigator.of(context).push(
@@ -216,7 +216,12 @@ class _LevelsScreenState extends State<LevelsScreen> {
     return new Scaffold(
       key: key,
       body: new Container(
-        margin: const EdgeInsets.all(10.0),
+        decoration: const BoxDecoration(
+          image: const DecorationImage(
+            image: const AssetImage("assets/images/landscape.png"),
+            fit: BoxFit.fill,
+          ),
+        ),
         child: new Builder(builder: (BuildContext c) {
           return new AsyncLoader(
               key: _asyncLoaderState,
@@ -255,7 +260,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               children: <Widget>[
                 new Text("Show launch guides"),
                 new Checkbox(
-                  value: prefs.getBool("SHOW_GUIDES") ?? false,
+                  value: prefs.getBool("SHOW_GUIDES") ?? true,
                   onChanged: (nextValue) =>
                       setState(() => prefs.setBool("SHOW_GUIDES", nextValue)),
                 ),

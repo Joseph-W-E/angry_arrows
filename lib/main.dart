@@ -8,11 +8,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 
 Future<Null> main() async {
-  // setup preferred landscape
-  SystemChrome.setPreferredOrientations([
-    DeviceOrientation.landscapeLeft,
-  ]);
-
   // setup Flame
   Flame.util.enableEvents();
   Flame.audio.disableLog();
