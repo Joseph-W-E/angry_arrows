@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:angry_arrows/constants.dart';
 import 'package:angry_arrows/data/firebase_adapter.dart';
 import 'package:angry_arrows/game/game.dart';
 import 'package:angry_arrows/game/objects/level.dart';
@@ -21,6 +20,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+
   @override
   void initState() {
     super.initState();
@@ -52,7 +52,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   "Angry Arrows >:(",
                   // Todo - figure out why fonts aren't displaying
                   style: const TextStyle(
-                    inherit: false,
                     fontSize: 64.0,
                     color: Colors.white,
                     package: "angry_arrows",
@@ -216,26 +215,19 @@ class _LevelsScreenState extends State<LevelsScreen> {
     return new Scaffold(
       key: key,
       body: new Container(
-        alignment: FractionalOffset.center,
-        decoration: const BoxDecoration(
-          image: const DecorationImage(
-            fit: BoxFit.fill,
-            image: const AssetImage("assets/images/landscape.png"),
-          ),
-        ),
+        margin: const EdgeInsets.all(10.0),
         child: new Builder(builder: (BuildContext c) {
-          return new Container(
-            child: new AsyncLoader(
-                key: _asyncLoaderState,
-                initState: (() async =>
-                    prefs ??= await SharedPreferences.getInstance()),
-                renderLoad: () =>
-                    new Center(child: new CircularProgressIndicator()),
-                renderError: ([error]) => new Center(
-                      child: new Text('Unable to load the level select.'),
-                    ),
-                renderSuccess: ({data}) => _renderLevelSelect(c)),
-          );
+          return new AsyncLoader(
+              key: _asyncLoaderState,
+              initState: (() async =>
+                  prefs ??= await SharedPreferences.getInstance()),
+              renderLoad: () =>
+                  new Center(child: new CircularProgressIndicator()),
+              renderError: ([error]) => new Center(
+                    child: new Text(
+                        'Unable to load the level select.  Good luck with that'),
+                  ),
+              renderSuccess: ({data}) => _renderLevelSelect(c));
         }),
       ),
     );
@@ -262,11 +254,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
               children: <Widget>[
                 new Text("Show launch guides"),
                 new Checkbox(
-                  value: prefs.getBool(AppSharedPrefs.showGuides) ?? true,
-                  onChanged: (nextValue) => setState(
-                        () =>
-                            prefs.setBool(AppSharedPrefs.showGuides, nextValue),
-                      ),
+                  value: prefs.getBool("SHOW_GUIDES") ?? false,
+                  onChanged: (nextValue) =>
+                      setState(() => prefs.setBool("SHOW_GUIDES", nextValue)),
                 ),
               ],
             ),
@@ -276,15 +266,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
               children: <Widget>[
                 new Text("Override current level"),
                 new Slider(
-                  // casting int to double because of SharedPrefs flutter implementation issue
-                  value: prefs.getInt(AppSharedPrefs.levelOverride)?.toDouble() ?? 2.0,
+                  value: prefs.getInt("CURRENT_LEVEL_INT")?.toDouble() ?? 2.0,
                   min: 1.0,
                   max: 30.0,
                   divisions: 30,
-                  label: prefs.getInt(AppSharedPrefs.levelOverride).toString(),
+                  label: prefs.getInt("CURRENT_LEVEL_INT").toString(),
                   thumbOpenAtMin: true,
                   onChanged: (nextValue) => setState(() =>
-                      prefs.setInt(AppSharedPrefs.levelOverride, nextValue.toInt())),
+                      prefs.setInt("CURRENT_LEVEL_INT", nextValue.toInt())),
                 ),
               ],
             ),

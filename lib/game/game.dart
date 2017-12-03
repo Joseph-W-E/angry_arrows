@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'dart:ui';
 
-import 'package:angry_arrows/constants.dart';
 import 'package:angry_arrows/game/input/gesture.dart';
 import 'package:angry_arrows/game/objects/hud.dart';
 import 'package:angry_arrows/game/objects/level.dart';
@@ -12,7 +11,6 @@ import 'package:angry_arrows/game/physics/physics.dart';
 import 'package:flame/component.dart';
 import 'package:flame/flame.dart';
 import 'package:flame/game.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:meta/meta.dart';
 
 typedef void CanvasStroker(Canvas c);
@@ -20,15 +18,12 @@ typedef void CanvasStroker(Canvas c);
 typedef void OnGameComplete(int level, int score);
 
 GameScene activeGameScene;
-SharedPreferences prefs;
 
-Future<Null> loadGameScene(
-    Levels levels, int levelToStart, OnGameComplete onGameComplete) async {
+Future<Null> loadGameScene(Levels levels, int levelToStart, OnGameComplete onGameComplete) async {
   // setup the dimensions
   var dimensions = await Flame.util.initialDimensions();
-  // start the game
-  prefs = await SharedPreferences.getInstance();
 
+  // start the game
   activeGameScene = new GameScene(
     dimensions: dimensions,
     config: levels.getLevel(levelToStart),
