@@ -69,6 +69,47 @@ class Levels {
           ..y = _height - 110,
       ];
 
+  LevelConfiguration get level3 => new LevelConfiguration(dimensions: _dimensions)
+      ..level = 3
+      ..landscape = new LandscapeConfig(
+        width: _dimensions.width,
+        height: _dimensions.height,
+        x: _dimensions.width / 2,
+        y: _dimensions.height / 2,
+      )
+      ..arrow = _defaultArrowConfig
+      ..crates = [
+        new CrateConfig()
+          ..x = 2000.0
+          ..y = _height - 198,
+        new CrateConfig()
+          ..x = 1600.0
+          ..y = _height - 198,
+        new CrateConfig()
+          ..x = 700.0
+          ..y = _height - 198,
+        new CrateConfig()
+          ..x = 2000.0
+          ..y = _height - 198,
+        new CrateConfig()
+          ..x = 1600.0
+          ..y = _height - 198,
+        new CrateConfig()
+          ..x = 700.0
+          ..y = _height - 198,
+      ]
+      ..platforms = [
+        new PlatformConfig()
+          ..x = 2000.0
+          ..y = _height - 110,
+        new PlatformConfig()
+          ..x = 1600.0
+          ..y = _height - 110,
+        new PlatformConfig()
+          ..x = 700.0
+          ..y = _height - 110,
+      ];
+
   ArrowConfig get _defaultArrowConfig => new ArrowConfig()
     ..x = 300.0
     ..y = _height - 400.0;

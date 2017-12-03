@@ -71,13 +71,9 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _handleStartOnPress() => loadGameScene(widget.levels, 1);
+  void _handleStartOnPress() => loadGameScene(widget.levels, 1, firebase.writeScore);
 
   void _handleLevelsOnPress() {
-    firebase.writeScore(
-      level: 999,
-      score: 555,
-    );
     Navigator.of(context).push(
       new MaterialPageRoute<Null>(builder: (BuildContext context) {
         return new LevelsScreen(widget.levels);
@@ -197,7 +193,7 @@ class _LevelsScreenState extends State<LevelsScreen> {
                         "This level doesn't actually exist.  This is not an error.")));
               } else if (isEnabled) {
                 Navigator.pop(context);
-                loadGameScene(widget.levels, i);
+                loadGameScene(widget.levels, i, firebase.writeScore);
               }
             },
             scaffoldContext: c),
