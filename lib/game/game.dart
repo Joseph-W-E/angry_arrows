@@ -8,20 +8,26 @@ import 'package:angry_arrows/game/objects/level.dart';
 import 'package:angry_arrows/game/objects/objects.dart';
 import 'package:angry_arrows/game/physics/formulas.dart';
 import 'package:angry_arrows/game/physics/physics.dart';
+import 'package:angry_arrows/screens/constants.dart';
 import 'package:flame/component.dart';
 import 'package:flame/flame.dart';
 import 'package:flame/game.dart';
 import 'package:meta/meta.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 typedef void CanvasStroker(Canvas c);
 
 typedef void OnGameComplete(int level, int score);
 
 GameScene activeGameScene;
+SharedPreferences _prefs;
 
-Future<Null> loadGameScene(Levels levels, int levelToStart, OnGameComplete onGameComplete) async {
+Future<Null> loadGameScene(
+    Levels levels, int levelToStart, OnGameComplete onGameComplete) async {
   // setup the dimensions
   var dimensions = await Flame.util.initialDimensions();
+
+  _prefs = await SharedPreferences.getInstance();
 
   // start the game
   activeGameScene = new GameScene(
@@ -317,7 +323,7 @@ class GameScene extends Game {
 
   // Renders launch info]
   void _internalRenderGuides(Canvas canvas) {
-    var showGuides = prefs.getBool(AppSharedPrefs.showGuides) ?? true;
+    var showGuides = _prefs.getBool(AppSharedPrefs.showGuides) ?? true;
     if (showGuides &&
         _currentArrowPoint != _arrowStartPoint &&
         !_physics.hasLaunched) {
