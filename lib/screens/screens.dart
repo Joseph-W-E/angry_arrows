@@ -20,12 +20,11 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-
   @override
   void initState() {
     super.initState();
 
-    firebase.login();
+//    firebase.login();
   }
 
   @override
@@ -52,6 +51,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   "Angry Arrows >:(",
                   // Todo - figure out why fonts aren't displaying
                   style: const TextStyle(
+                    inherit: false,
                     fontSize: 64.0,
                     color: Colors.white,
                     package: "angry_arrows",
@@ -221,19 +221,26 @@ class _LevelsScreenState extends State<LevelsScreen> {
     return new Scaffold(
       key: key,
       body: new Container(
-        margin: const EdgeInsets.all(10.0),
+        alignment: FractionalOffset.center,
+        decoration: const BoxDecoration(
+          image: const DecorationImage(
+            fit: BoxFit.fill,
+            image: const AssetImage("assets/images/landscape.png"),
+          ),
+        ),
         child: new Builder(builder: (BuildContext c) {
-          return new AsyncLoader(
-              key: _asyncLoaderState,
-              initState: (() async =>
-                  prefs ??= await SharedPreferences.getInstance()),
-              renderLoad: () =>
-                  new Center(child: new CircularProgressIndicator()),
-              renderError: ([error]) => new Center(
-                    child: new Text(
-                        'Unable to load the level select.  Good luck with that'),
-                  ),
-              renderSuccess: ({data}) => _renderLevelSelect(c));
+          return new Container(
+            child: new AsyncLoader(
+                key: _asyncLoaderState,
+                initState: (() async =>
+                    prefs ??= await SharedPreferences.getInstance()),
+                renderLoad: () =>
+                    new Center(child: new CircularProgressIndicator()),
+                renderError: ([error]) => new Center(
+                      child: new Text('Unable to load the level select.'),
+                    ),
+                renderSuccess: ({data}) => _renderLevelSelect(c)),
+          );
         }),
       ),
     );
