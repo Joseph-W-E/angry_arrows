@@ -33,6 +33,7 @@ Future<Null> loadGameScene(
   activeGameScene = new GameScene(
     dimensions: dimensions,
     config: levels.getLevel(levelToStart),
+    levels: levels,
     onGameComplete: onGameComplete,
   )..start(onInput: _onInput);
 }
@@ -48,9 +49,10 @@ void unloadGameScene() {
 
 class GameScene extends Game {
   final Size dimensions;
-  final LevelConfiguration config;
   final OnGameComplete onGameComplete;
+  final Levels levels;
 
+  LevelConfiguration config;
   Landscape _landscape;
   Arrow _arrow;
   List<Crate> _crates;
@@ -64,8 +66,14 @@ class GameScene extends Game {
   int _totalAmountOfCrates = 0;
   int _timesLaunched = 0;
 
-  GameScene(
-      {@required this.dimensions, @required this.config, this.onGameComplete}) {
+  int get score => math.max(0, 2 * _totalAmountOfCrates - _timesLaunched);
+
+  GameScene({
+    @required this.dimensions,
+    @required this.config,
+    @required this.levels,
+    this.onGameComplete,
+  }) {
     _setupSprites();
   }
 
@@ -97,6 +105,7 @@ class GameScene extends Game {
 
     _crates = config.crates.map((config) => new Crate(config)).toList();
     _totalAmountOfCrates = _crates.length;
+    _timesLaunched = 0;
 
     _platforms =
         config.platforms.map((config) => new Platform(config)).toList();
@@ -104,6 +113,11 @@ class GameScene extends Game {
 
   @override
   void render(Canvas canvas) {
+
+    if (!_physics.hasLaunched && score == 0) {
+      _handleRestart(null);
+    }
+
     // render the landscape
     _internalRenderSprite(canvas, _landscape);
 
@@ -113,6 +127,17 @@ class GameScene extends Game {
           text: '${config.level}',
           canvas: canvas,
           x: dimensions.width - 200.0,
+          y: dimensions.height - 200.0,
+          width: 200.0,
+        ),
+        Hud.drawText);
+
+    // render the current score
+    _internalRenderHudText(
+        new HudInfo(
+          text: '$score',
+          canvas: canvas,
+          x: 100.0,
           y: dimensions.height - 200.0,
           width: 200.0,
         ),
@@ -180,15 +205,9 @@ class GameScene extends Game {
     for (Crate crate in _crates) {
       Point cratePoint = new Point(x: crate.x, y: crate.y);
       if (Formulas.distanceBetween(_currentArrowPoint, cratePoint) < 100) {
-        _resetArrow();
         _crates.remove(crate);
-
         if (_crates.isEmpty) {
-          unloadGameScene();
-          if (onGameComplete != null) {
-            onGameComplete(
-                config.level, 2 * _totalAmountOfCrates - _timesLaunched);
-          }
+          _completeScene();
         }
         break;
       }
@@ -207,6 +226,27 @@ class GameScene extends Game {
     _arrow.x = _arrowStartPoint.x;
     _arrow.y = _arrowStartPoint.y;
     _physics.reset();
+  }
+
+  void _completeScene() {
+//    onGameComplete?.call(
+//        config.level, score);
+    _nextLevel();
+  }
+
+  void _nextLevel() {
+    // increment completed level
+    if (config.level >= (_prefs.getInt(AppSharedPrefs.currentLevel) ?? 2)) {
+      _prefs.setInt(AppSharedPrefs.currentLevel, config.level + 1);
+    }
+    var c = levels.getLevel(config.level + 1);
+    if (c != null) {
+      this.config = c;
+      _physics.reset();
+      _setupSprites();
+    } else {
+      unloadGameScene();
+    }
   }
 
   /// Handles user input.

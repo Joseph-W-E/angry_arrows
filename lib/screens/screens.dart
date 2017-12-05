@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:angry_arrows/data/firebase_adapter.dart';
 import 'package:angry_arrows/game/game.dart';
@@ -70,8 +71,12 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _handleStartOnPress() =>
-      loadGameScene(widget.levels, 1, firebase.writeScore);
+  Future<Null> _handleStartOnPress() async {
+    var prefs = await SharedPreferences.getInstance();
+    var currentLevel = prefs.getInt(AppSharedPrefs.currentLevel) ?? 1;
+    currentLevel = math.min(currentLevel, widget.levels.levels.length);
+    loadGameScene(widget.levels, currentLevel, firebase.writeScore);
+  }
 
   void _handleLevelsOnPress() {
     Navigator.of(context).push(
@@ -177,9 +182,10 @@ class _LevelsScreenState extends State<LevelsScreen> {
           scaffoldContext: c)
     ];
 
+    var currentLevel = prefs.getInt(AppSharedPrefs.currentLevel) ?? 1;
     for (var i = 1; i <= 30; i++) {
       var isValid = i - 1 < widget.levels.levels.length;
-      var isEnabled = i <= (prefs?.getInt(AppSharedPrefs.levelOverride) ?? 2);
+      var isEnabled = i <= currentLevel;
 
       levelPreviews.add(
         new BoxItem(
@@ -260,9 +266,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
               children: <Widget>[
                 new Text("Show launch guides"),
                 new Checkbox(
-                  value: prefs.getBool("SHOW_GUIDES") ?? true,
-                  onChanged: (nextValue) =>
-                      setState(() => prefs.setBool("SHOW_GUIDES", nextValue)),
+                  value: prefs.getBool(AppSharedPrefs.showGuides) ?? true,
+                  onChanged: (nextValue) => setState(() =>
+                      prefs.setBool(AppSharedPrefs.showGuides, nextValue)),
                 ),
               ],
             ),
@@ -272,14 +278,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
               children: <Widget>[
                 new Text("Override current level"),
                 new Slider(
-                  value: prefs.getInt("CURRENT_LEVEL_INT")?.toDouble() ?? 2.0,
+                  value:
+                      prefs.getInt(AppSharedPrefs.currentLevel)?.toDouble() ??
+                          1.0,
                   min: 1.0,
                   max: 30.0,
                   divisions: 30,
-                  label: prefs.getInt("CURRENT_LEVEL_INT").toString(),
+                  label: (prefs.getInt(AppSharedPrefs.currentLevel) ?? 1).toString(),
                   thumbOpenAtMin: true,
-                  onChanged: (nextValue) => setState(() =>
-                      prefs.setInt("CURRENT_LEVEL_INT", nextValue.toInt())),
+                  onChanged: (nextValue) => setState(() => prefs.setInt(
+                      AppSharedPrefs.currentLevel, nextValue.toInt())),
                 ),
               ],
             ),
