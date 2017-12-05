@@ -113,7 +113,6 @@ class GameScene extends Game {
 
   @override
   void render(Canvas canvas) {
-
     if (!_physics.hasLaunched && score == 0) {
       _handleRestart(null);
     }
@@ -180,7 +179,8 @@ class GameScene extends Game {
   @override
   void update(double t) {
     if (_physics.hasLaunched) {
-      _handlePhysicsUpdate(_physics.update(t));
+      var timeModifier = 1 + (_prefs.getInt(AppSharedPrefs.arrowSpeed) ?? 1);
+      _handlePhysicsUpdate(_physics.update(t * timeModifier));
       _checkCollisions();
     }
   }
@@ -229,8 +229,7 @@ class GameScene extends Game {
   }
 
   void _completeScene() {
-//    onGameComplete?.call(
-//        config.level, score);
+    onGameComplete?.call(config.level, score);
     _nextLevel();
   }
 

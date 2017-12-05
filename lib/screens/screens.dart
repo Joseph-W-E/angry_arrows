@@ -284,10 +284,34 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   min: 1.0,
                   max: 30.0,
                   divisions: 30,
-                  label: (prefs.getInt(AppSharedPrefs.currentLevel) ?? 1).toString(),
+                  label: (prefs.getInt(AppSharedPrefs.currentLevel) ?? 1)
+                      .toString(),
                   thumbOpenAtMin: true,
                   onChanged: (nextValue) => setState(() => prefs.setInt(
                       AppSharedPrefs.currentLevel, nextValue.toInt())),
+                ),
+              ],
+            ),
+          ),
+          new Container(
+            child: new Row(
+              children: <Widget>[
+                new Text("Arrow Speed"),
+                new Slider(
+                  value: prefs.getInt(AppSharedPrefs.arrowSpeed)?.toDouble() ??
+                      1.0,
+                  min: 1.0,
+                  max: 5.0,
+                  divisions: 5,
+                  label:
+                      (prefs.getInt(AppSharedPrefs.arrowSpeed) ?? 1).toString(),
+                  thumbOpenAtMin: true,
+                  onChanged: (nextValue) => setState(
+                        () => prefs.setInt(
+                              AppSharedPrefs.arrowSpeed,
+                              nextValue.toInt(),
+                            ),
+                      ),
                 ),
               ],
             ),
