@@ -50,7 +50,7 @@ class ArrowPhysics {
   PhysicsUpdatePayload update(double tickTime) {
     if (!_hasLaunched) return null;
 
-    _t += 2 * tickTime;
+    _t += tickTime;
 
     // calculate a the current point
     var currentPoint = new Point(
